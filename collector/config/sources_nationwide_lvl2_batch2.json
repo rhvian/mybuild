@@ -1,0 +1,742 @@
+[
+  {
+    "source_id": "jzsc_company_live",
+    "name": "四库一平台-建筑企业真实数据",
+    "source_type": "jzsc_company_live",
+    "source_level": "A",
+    "base_url": "https://jzsc.mohurd.gov.cn",
+    "province_code": "000000",
+    "city_code": "110000",
+    "enabled": true
+  },
+  {
+    "source_id": "jzsc_staff_live",
+    "name": "四库一平台-从业人员真实数据",
+    "source_type": "jzsc_staff_live",
+    "source_level": "B",
+    "base_url": "https://jzsc.mohurd.gov.cn",
+    "province_code": "000000",
+    "city_code": "110000",
+    "enabled": true
+  },
+  {
+    "source_id": "jzsc_project_live",
+    "name": "四库一平台-项目/招采真实数据",
+    "source_type": "jzsc_project_live",
+    "source_level": "B",
+    "base_url": "https://jzsc.mohurd.gov.cn",
+    "province_code": "000000",
+    "city_code": "110000",
+    "enabled": true
+  },
+  {
+    "source_id": "prov_04_liveidx",
+    "name": "内蒙古省级平台入口索引",
+    "source_type": "province_portal_index_live",
+    "source_level": "B",
+    "base_url": "http://110.16.70.26:82/nmjgpublish/index.html",
+    "province_code": "000000",
+    "city_code": "000000",
+    "enabled": true
+  },
+  {
+    "source_id": "prov_06_liveidx",
+    "name": "吉林省级平台入口索引",
+    "source_type": "province_portal_index_live",
+    "source_level": "B",
+    "base_url": "https://cx.jlsjsxxw.com:8084/",
+    "province_code": "000000",
+    "city_code": "000000",
+    "enabled": true
+  },
+  {
+    "source_id": "prov_22_liveidx",
+    "name": "四川省级平台入口索引",
+    "source_type": "province_portal_index_live",
+    "source_level": "B",
+    "base_url": "http://202.61.88.188/xmgk/yth/index.aspx",
+    "province_code": "000000",
+    "city_code": "000000",
+    "enabled": true
+  },
+  {
+    "source_id": "prov_14_liveidx",
+    "name": "山东省级平台入口索引",
+    "source_type": "province_portal_index_live",
+    "source_level": "B",
+    "base_url": "http://221.214.94.41:81/xyzj/DTFront/ZongHeSearch/?searchType=1",
+    "province_code": "000000",
+    "city_code": "000000",
+    "enabled": true
+  },
+  {
+    "source_id": "prov_03_liveidx",
+    "name": "山西省级平台入口索引",
+    "source_type": "province_portal_index_live",
+    "source_level": "B",
+    "base_url": "http://183.201.195.143:28800/webserver/publish/index.html",
+    "province_code": "000000",
+    "city_code": "000000",
+    "enabled": true
+  },
+  {
+    "source_id": "prov_02_liveidx",
+    "name": "河北省级平台入口索引",
+    "source_type": "province_portal_index_live",
+    "source_level": "B",
+    "base_url": "http://121.29.49.134:18000/",
+    "province_code": "000000",
+    "city_code": "000000",
+    "enabled": true
+  },
+  {
+    "source_id": "prov_15_liveidx",
+    "name": "河南省级平台入口索引",
+    "source_type": "province_portal_index_live",
+    "source_level": "B",
+    "base_url": "http://hngcjs.hnjs.henan.gov.cn/",
+    "province_code": "000000",
+    "city_code": "000000",
+    "enabled": true
+  },
+  {
+    "source_id": "prov_10_liveidx",
+    "name": "浙江省级平台入口索引",
+    "source_type": "province_portal_index_live",
+    "source_level": "B",
+    "base_url": "https://jzsc.jst.zj.gov.cn/PublicWeb/index.html",
+    "province_code": "000000",
+    "city_code": "000000",
+    "enabled": true
+  },
+  {
+    "source_id": "prov_17_liveidx",
+    "name": "湖南省级平台入口索引",
+    "source_type": "province_portal_index_live",
+    "source_level": "B",
+    "base_url": "https://gcxm.hunanjs.gov.cn:443/",
+    "province_code": "000000",
+    "city_code": "000000",
+    "enabled": true
+  },
+  {
+    "source_id": "prov_12_liveidx",
+    "name": "福建省级平台入口索引",
+    "source_type": "province_portal_index_live",
+    "source_level": "B",
+    "base_url": "https://220.160.52.164:20082/login",
+    "province_code": "000000",
+    "city_code": "000000",
+    "enabled": true
+  },
+  {
+    "source_id": "prov_05_liveidx",
+    "name": "辽宁省级平台入口索引",
+    "source_type": "province_portal_index_live",
+    "source_level": "B",
+    "base_url": "http://218.60.154.1:81/webserver/lnpublish/index.html",
+    "province_code": "000000",
+    "city_code": "000000",
+    "enabled": true
+  },
+  {
+    "source_id": "prov_28_liveidx",
+    "name": "青海省级平台入口索引",
+    "source_type": "province_portal_index_live",
+    "source_level": "B",
+    "base_url": "http://139.170.150.135/asite/cloud/index",
+    "province_code": "000000",
+    "city_code": "000000",
+    "enabled": true
+  },
+  {
+    "source_id": "prov_08_liveidx",
+    "name": "上海省级平台入口索引",
+    "source_type": "province_portal_index_live",
+    "source_level": "B",
+    "base_url": "https://zjw.sh.gov.cn/",
+    "province_code": "000000",
+    "city_code": "000000",
+    "enabled": true
+  },
+  {
+    "source_id": "prov_01_liveidx",
+    "name": "天津省级平台入口索引",
+    "source_type": "province_portal_index_live",
+    "source_level": "B",
+    "base_url": "https://szzj.zfcxjs.tj.gov.cn:30479/",
+    "province_code": "000000",
+    "city_code": "000000",
+    "enabled": true
+  },
+  {
+    "source_id": "prov_11_liveidx",
+    "name": "安徽省级平台入口索引",
+    "source_type": "province_portal_index_live",
+    "source_level": "B",
+    "base_url": "https://dohurd.ah.gov.cn/zwfw/xtbgpt/index.html",
+    "province_code": "000000",
+    "city_code": "000000",
+    "enabled": true
+  },
+  {
+    "source_id": "prov_18_liveidx",
+    "name": "广东省级平台入口索引",
+    "source_type": "province_portal_index_live",
+    "source_level": "B",
+    "base_url": "https://scjg.gdcic.net/",
+    "province_code": "000000",
+    "city_code": "000000",
+    "enabled": true
+  },
+  {
+    "source_id": "prov_30_liveidx",
+    "name": "新疆省级平台入口索引",
+    "source_type": "province_portal_index_live",
+    "source_level": "B",
+    "base_url": "https://jsy.xjjs.gov.cn/",
+    "province_code": "000000",
+    "city_code": "000000",
+    "enabled": true
+  },
+  {
+    "source_id": "prov_13_liveidx",
+    "name": "江西省级平台入口索引",
+    "source_type": "province_portal_index_live",
+    "source_level": "B",
+    "base_url": "https://zjy.jxjst.gov.cn/",
+    "province_code": "000000",
+    "city_code": "000000",
+    "enabled": true
+  },
+  {
+    "source_id": "prov_25_liveidx",
+    "name": "西藏省级平台入口索引",
+    "source_type": "province_portal_index_live",
+    "source_level": "B",
+    "base_url": "http://zjt.xizang.gov.cn/",
+    "province_code": "000000",
+    "city_code": "000000",
+    "enabled": true
+  },
+  {
+    "source_id": "prov_21_liveidx",
+    "name": "重庆省级平台入口索引",
+    "source_type": "province_portal_index_live",
+    "source_level": "B",
+    "base_url": "http://www.cqjsxx.com/webcqjg/Index.aspx",
+    "province_code": "000000",
+    "city_code": "000000",
+    "enabled": true
+  },
+  {
+    "source_id": "prov_24_liveidx",
+    "name": "云南省级平台入口索引",
+    "source_type": "province_portal_index_live",
+    "source_level": "B",
+    "base_url": "http://www.ynjzjgcx.com/",
+    "province_code": "000000",
+    "city_code": "000000",
+    "enabled": true
+  },
+  {
+    "source_id": "prov_29_liveidx",
+    "name": "宁夏省级平台入口索引",
+    "source_type": "province_portal_index_live",
+    "source_level": "B",
+    "base_url": "http://www.nxjscx.com.cn/index.htm",
+    "province_code": "000000",
+    "city_code": "000000",
+    "enabled": true
+  },
+  {
+    "source_id": "prov_19_liveidx",
+    "name": "广西省级平台入口索引",
+    "source_type": "province_portal_index_live",
+    "source_level": "B",
+    "base_url": "https://gxjzsc.gxcic.net/",
+    "province_code": "000000",
+    "city_code": "000000",
+    "enabled": true
+  },
+  {
+    "source_id": "prov_09_liveidx",
+    "name": "江苏省级平台入口索引",
+    "source_type": "province_portal_index_live",
+    "source_level": "B",
+    "base_url": "http://58.213.147.230:7001/Jsjzyxyglpt/faces/public/default.jsp",
+    "province_code": "000000",
+    "city_code": "000000",
+    "enabled": true
+  },
+  {
+    "source_id": "prov_20_liveidx",
+    "name": "海南省级平台入口索引",
+    "source_type": "province_portal_index_live",
+    "source_level": "B",
+    "base_url": "http://www.hizj.net:8008/PublishWeb/Default.aspx",
+    "province_code": "000000",
+    "city_code": "000000",
+    "enabled": true
+  },
+  {
+    "source_id": "prov_16_liveidx",
+    "name": "湖北省级平台入口索引",
+    "source_type": "province_portal_index_live",
+    "source_level": "B",
+    "base_url": "http://jg.hbcic.net.cn/web/",
+    "province_code": "000000",
+    "city_code": "000000",
+    "enabled": true
+  },
+  {
+    "source_id": "prov_27_liveidx",
+    "name": "甘肃省级平台入口索引",
+    "source_type": "province_portal_index_live",
+    "source_level": "B",
+    "base_url": "http://zjt.gansu.gov.cn/",
+    "province_code": "000000",
+    "city_code": "000000",
+    "enabled": true
+  },
+  {
+    "source_id": "prov_23_liveidx",
+    "name": "贵州省级平台入口索引",
+    "source_type": "province_portal_index_live",
+    "source_level": "B",
+    "base_url": "http://61.243.11.50:8088/GZZHXT/Index.html",
+    "province_code": "000000",
+    "city_code": "000000",
+    "enabled": true
+  },
+  {
+    "source_id": "prov_26_liveidx",
+    "name": "陕西省级平台入口索引",
+    "source_type": "province_portal_index_live",
+    "source_level": "B",
+    "base_url": "http://jzscyth.shaanxi.gov.cn:7001/PDR/network/credit/home",
+    "province_code": "000000",
+    "city_code": "000000",
+    "enabled": true
+  },
+  {
+    "source_id": "prov_07_liveidx",
+    "name": "黑龙江省级平台入口索引",
+    "source_type": "province_portal_index_live",
+    "source_level": "B",
+    "base_url": "http://112.103.231.221:8095/cmspsp/indexAction_queryHomeData.action",
+    "province_code": "000000",
+    "city_code": "000000",
+    "enabled": true
+  },
+  {
+    "source_id": "prov_28_liveidx_lvl2_005",
+    "parent_source_id": "prov_28_liveidx",
+    "name": "prov_28_liveidx 二级入口 credit 5",
+    "source_type": "province_entry_probe_live",
+    "source_level": "C",
+    "base_url": "http://js.qinghai.gov.cn:5011/credit",
+    "category": "credit",
+    "enabled": true
+  },
+  {
+    "source_id": "prov_28_liveidx_lvl2_006",
+    "parent_source_id": "prov_28_liveidx",
+    "name": "prov_28_liveidx 二级入口 credit 6",
+    "source_type": "province_entry_probe_live",
+    "source_level": "C",
+    "base_url": "http://139.170.150.135/pub/query/credit/creditIndex",
+    "category": "credit",
+    "enabled": true
+  },
+  {
+    "source_id": "prov_28_liveidx_lvl2_007",
+    "parent_source_id": "prov_28_liveidx",
+    "name": "prov_28_liveidx 二级入口 staff 7",
+    "source_type": "province_entry_probe_live",
+    "source_level": "C",
+    "base_url": "http://js.qinghai.gov.cn:8071/personalLogin",
+    "category": "staff",
+    "enabled": true
+  },
+  {
+    "source_id": "prov_28_liveidx_lvl2_008",
+    "parent_source_id": "prov_28_liveidx",
+    "name": "prov_28_liveidx 二级入口 project 8",
+    "source_type": "province_entry_probe_live",
+    "source_level": "C",
+    "base_url": "http://js.qinghai.gov.cn:5005/c/small/project/list",
+    "category": "project",
+    "enabled": true
+  },
+  {
+    "source_id": "prov_28_liveidx_lvl2_009",
+    "parent_source_id": "prov_28_liveidx",
+    "name": "prov_28_liveidx 二级入口 enterprise 9",
+    "source_type": "province_entry_probe_live",
+    "source_level": "C",
+    "base_url": "http://139.170.150.135/dataservice/query/comp/list/BS",
+    "category": "enterprise",
+    "enabled": true
+  },
+  {
+    "source_id": "prov_28_liveidx_lvl2_010",
+    "parent_source_id": "prov_28_liveidx",
+    "name": "prov_28_liveidx 二级入口 enterprise 10",
+    "source_type": "province_entry_probe_live",
+    "source_level": "C",
+    "base_url": "http://139.170.150.135/pub/query/lwComp/lwCompList",
+    "category": "enterprise",
+    "enabled": true
+  },
+  {
+    "source_id": "prov_28_liveidx_lvl2_011",
+    "parent_source_id": "prov_28_liveidx",
+    "name": "prov_28_liveidx 二级入口 enterprise 11",
+    "source_type": "province_entry_probe_live",
+    "source_level": "C",
+    "base_url": "http://139.170.150.135/dataservice/query/comp/zbdlList",
+    "category": "enterprise",
+    "enabled": true
+  },
+  {
+    "source_id": "prov_28_liveidx_lvl2_012",
+    "parent_source_id": "prov_28_liveidx",
+    "name": "prov_28_liveidx 二级入口 enterprise 12",
+    "source_type": "province_entry_probe_live",
+    "source_level": "C",
+    "base_url": "http://139.170.150.135/dataservice/query/comp/zjzxList",
+    "category": "enterprise",
+    "enabled": true
+  },
+  {
+    "source_id": "prov_28_liveidx_lvl2_013",
+    "parent_source_id": "prov_28_liveidx",
+    "name": "prov_28_liveidx 二级入口 staff 13",
+    "source_type": "province_entry_probe_live",
+    "source_level": "C",
+    "base_url": "http://139.170.150.135/dataservice/query/staff/list/BS",
+    "category": "staff",
+    "enabled": true
+  },
+  {
+    "source_id": "prov_28_liveidx_lvl2_014",
+    "parent_source_id": "prov_28_liveidx",
+    "name": "prov_28_liveidx 二级入口 enterprise 14",
+    "source_type": "province_entry_probe_live",
+    "source_level": "C",
+    "base_url": "http://js.qinghai.gov.cn:8071/pub/query/baComp/baCompList",
+    "category": "enterprise",
+    "enabled": true
+  },
+  {
+    "source_id": "prov_28_liveidx_lvl2_015",
+    "parent_source_id": "prov_28_liveidx",
+    "name": "prov_28_liveidx 二级入口 enterprise 15",
+    "source_type": "province_entry_probe_live",
+    "source_level": "C",
+    "base_url": "http://139.170.150.135/dataservice/query/comp/list/SW",
+    "category": "enterprise",
+    "enabled": true
+  },
+  {
+    "source_id": "prov_28_liveidx_lvl2_016",
+    "parent_source_id": "prov_28_liveidx",
+    "name": "prov_28_liveidx 二级入口 enterprise 16",
+    "source_type": "province_entry_probe_live",
+    "source_level": "C",
+    "base_url": "http://js.qinghai.gov.cn:8089/pub/query/outComp/outCompList/ALL/131120164101727004",
+    "category": "enterprise",
+    "enabled": true
+  },
+  {
+    "source_id": "prov_28_liveidx_lvl2_017",
+    "parent_source_id": "prov_28_liveidx",
+    "name": "prov_28_liveidx 二级入口 staff 17",
+    "source_type": "province_entry_probe_live",
+    "source_level": "C",
+    "base_url": "http://139.170.150.135/dataservice/query/staff/list/WS",
+    "category": "staff",
+    "enabled": true
+  },
+  {
+    "source_id": "prov_28_liveidx_lvl2_018",
+    "parent_source_id": "prov_28_liveidx",
+    "name": "prov_28_liveidx 二级入口 project 18",
+    "source_type": "province_entry_probe_live",
+    "source_level": "C",
+    "base_url": "http://js.qinghai.gov.cn/pub/query/sgts/sgtsList",
+    "category": "project",
+    "enabled": true
+  },
+  {
+    "source_id": "prov_28_liveidx_lvl2_019",
+    "parent_source_id": "prov_28_liveidx",
+    "name": "prov_28_liveidx 二级入口 project 19",
+    "source_type": "province_entry_probe_live",
+    "source_level": "C",
+    "base_url": "http://js.qinghai.gov.cn/pub/query/proj/projHtbaList",
+    "category": "project",
+    "enabled": true
+  },
+  {
+    "source_id": "prov_28_liveidx_lvl2_020",
+    "parent_source_id": "prov_28_liveidx",
+    "name": "prov_28_liveidx 二级入口 project 20",
+    "source_type": "province_entry_probe_live",
+    "source_level": "C",
+    "base_url": "http://js.qinghai.gov.cn/pub/query/tender/tenderResultList",
+    "category": "project",
+    "enabled": true
+  },
+  {
+    "source_id": "prov_28_liveidx_lvl2_021",
+    "parent_source_id": "prov_28_liveidx",
+    "name": "prov_28_liveidx 二级入口 project 21",
+    "source_type": "province_entry_probe_live",
+    "source_level": "C",
+    "base_url": "http://js.qinghai.gov.cn/pub/query/proj/zlaqList",
+    "category": "project",
+    "enabled": true
+  },
+  {
+    "source_id": "prov_28_liveidx_lvl2_022",
+    "parent_source_id": "prov_28_liveidx",
+    "name": "prov_28_liveidx 二级入口 project 22",
+    "source_type": "province_entry_probe_live",
+    "source_level": "C",
+    "base_url": "http://139.170.150.135/pub/query/proj/sgxkList",
+    "category": "project",
+    "enabled": true
+  },
+  {
+    "source_id": "prov_28_liveidx_lvl2_023",
+    "parent_source_id": "prov_28_liveidx",
+    "name": "prov_28_liveidx 二级入口 project 23",
+    "source_type": "province_entry_probe_live",
+    "source_level": "C",
+    "base_url": "http://139.170.150.135/pub/query/jgba/jgbaList2",
+    "category": "project",
+    "enabled": true
+  },
+  {
+    "source_id": "prov_28_liveidx_lvl2_024",
+    "parent_source_id": "prov_28_liveidx",
+    "name": "prov_28_liveidx 二级入口 enterprise 24",
+    "source_type": "province_entry_probe_live",
+    "source_level": "C",
+    "base_url": "http://139.170.150.135/pub/query/credit/hmdList/1",
+    "category": "enterprise",
+    "enabled": true
+  },
+  {
+    "source_id": "prov_28_liveidx_lvl2_025",
+    "parent_source_id": "prov_28_liveidx",
+    "name": "prov_28_liveidx 二级入口 enterprise 25",
+    "source_type": "province_entry_probe_live",
+    "source_level": "C",
+    "base_url": "http://139.170.150.135/dataservice/query/comp/xfjcjgList",
+    "category": "enterprise",
+    "enabled": true
+  },
+  {
+    "source_id": "prov_28_liveidx_lvl2_026",
+    "parent_source_id": "prov_28_liveidx",
+    "name": "prov_28_liveidx 二级入口 tender 26",
+    "source_type": "province_entry_probe_live",
+    "source_level": "C",
+    "base_url": "http://jst.zj.gov.cn/DesktopDefault.aspx?tabid=1",
+    "category": "tender",
+    "enabled": true
+  },
+  {
+    "source_id": "prov_08_liveidx_lvl2_001",
+    "parent_source_id": "prov_08_liveidx",
+    "name": "prov_08_liveidx 二级入口 project 1",
+    "source_type": "province_entry_probe_live",
+    "source_level": "C",
+    "base_url": "https://zwdt.sh.gov.cn/govPortals/cprams/index",
+    "category": "project",
+    "enabled": true
+  },
+  {
+    "source_id": "prov_08_liveidx_lvl2_002",
+    "parent_source_id": "prov_08_liveidx",
+    "name": "prov_08_liveidx 二级入口 staff 2",
+    "source_type": "province_entry_probe_live",
+    "source_level": "C",
+    "base_url": "https://gmsys.zjw.sh.gov.cn:2002/index",
+    "category": "staff",
+    "enabled": true
+  },
+  {
+    "source_id": "prov_13_liveidx_lvl2_001",
+    "parent_source_id": "prov_13_liveidx",
+    "name": "prov_13_liveidx 二级入口 tender 1",
+    "source_type": "province_entry_probe_live",
+    "source_level": "C",
+    "base_url": "http://www.jxzwfww.gov.cn/jxzw/czbm/index.do?webId=1&orgCode=3600000012",
+    "category": "tender",
+    "enabled": true
+  },
+  {
+    "source_id": "prov_13_liveidx_lvl2_002",
+    "parent_source_id": "prov_13_liveidx",
+    "name": "prov_13_liveidx 二级入口 enterprise 2",
+    "source_type": "province_entry_probe_live",
+    "source_level": "C",
+    "base_url": "https://zjy.jxjst.gov.cn/w/cms/commonItemList/08j7v-rrarf0-00gmn/F",
+    "category": "enterprise",
+    "enabled": true
+  },
+  {
+    "source_id": "prov_13_liveidx_lvl2_003",
+    "parent_source_id": "prov_13_liveidx",
+    "name": "prov_13_liveidx 二级入口 enterprise 3",
+    "source_type": "province_entry_probe_live",
+    "source_level": "C",
+    "base_url": "http://zjy.jxjsxx.net/w/dataQuery/center",
+    "category": "enterprise",
+    "enabled": true
+  },
+  {
+    "source_id": "prov_13_liveidx_lvl2_004",
+    "parent_source_id": "prov_13_liveidx",
+    "name": "prov_13_liveidx 二级入口 enterprise 4",
+    "source_type": "province_entry_probe_live",
+    "source_level": "C",
+    "base_url": "https://zjy.jxjst.gov.cn/w/dataQuery/baPubList",
+    "category": "enterprise",
+    "enabled": true
+  },
+  {
+    "source_id": "prov_13_liveidx_lvl2_005",
+    "parent_source_id": "prov_13_liveidx",
+    "name": "prov_13_liveidx 二级入口 enterprise 5",
+    "source_type": "province_entry_probe_live",
+    "source_level": "C",
+    "base_url": "https://zjy.jxjst.gov.cn/w/dataQuery/baPubViolationList",
+    "category": "enterprise",
+    "enabled": true
+  },
+  {
+    "source_id": "prov_13_liveidx_lvl2_006",
+    "parent_source_id": "prov_13_liveidx",
+    "name": "prov_13_liveidx 二级入口 project 6",
+    "source_type": "province_entry_probe_live",
+    "source_level": "C",
+    "base_url": "https://zjy.jxjst.gov.cn/w/history/project/list",
+    "category": "project",
+    "enabled": true
+  },
+  {
+    "source_id": "prov_13_liveidx_lvl2_007",
+    "parent_source_id": "prov_13_liveidx",
+    "name": "prov_13_liveidx 二级入口 enterprise 7",
+    "source_type": "province_entry_probe_live",
+    "source_level": "C",
+    "base_url": "https://zjy.jxjst.gov.cn/w/history/project/qyyjList",
+    "category": "enterprise",
+    "enabled": true
+  },
+  {
+    "source_id": "prov_13_liveidx_lvl2_008",
+    "parent_source_id": "prov_13_liveidx",
+    "name": "prov_13_liveidx 二级入口 project 8",
+    "source_type": "province_entry_probe_live",
+    "source_level": "C",
+    "base_url": "https://zjy.jxjst.gov.cn/w/history/project/yejiUpNewList",
+    "category": "project",
+    "enabled": true
+  },
+  {
+    "source_id": "prov_13_liveidx_lvl2_009",
+    "parent_source_id": "prov_13_liveidx",
+    "name": "prov_13_liveidx 二级入口 staff 9",
+    "source_type": "province_entry_probe_live",
+    "source_level": "C",
+    "base_url": "https://zjy.jxjst.gov.cn/w/dataQuery/regList",
+    "category": "staff",
+    "enabled": true
+  },
+  {
+    "source_id": "prov_13_liveidx_lvl2_010",
+    "parent_source_id": "prov_13_liveidx",
+    "name": "prov_13_liveidx 二级入口 staff 10",
+    "source_type": "province_entry_probe_live",
+    "source_level": "C",
+    "base_url": "https://zjy.jxjst.gov.cn/w/dataQuery/safetyList",
+    "category": "staff",
+    "enabled": true
+  },
+  {
+    "source_id": "prov_13_liveidx_lvl2_011",
+    "parent_source_id": "prov_13_liveidx",
+    "name": "prov_13_liveidx 二级入口 staff 11",
+    "source_type": "province_entry_probe_live",
+    "source_level": "C",
+    "base_url": "https://zjy.jxjst.gov.cn/w/dataQuery/profList",
+    "category": "staff",
+    "enabled": true
+  },
+  {
+    "source_id": "prov_13_liveidx_lvl2_012",
+    "parent_source_id": "prov_13_liveidx",
+    "name": "prov_13_liveidx 二级入口 staff 12",
+    "source_type": "province_entry_probe_live",
+    "source_level": "C",
+    "base_url": "https://zjy.jxjst.gov.cn/w/dataQuery/specialList",
+    "category": "staff",
+    "enabled": true
+  },
+  {
+    "source_id": "prov_13_liveidx_lvl2_013",
+    "parent_source_id": "prov_13_liveidx",
+    "name": "prov_13_liveidx 二级入口 staff 13",
+    "source_type": "province_entry_probe_live",
+    "source_level": "C",
+    "base_url": "https://zjy.jxjst.gov.cn/w/cms/commonItemList/08j7v-mtxcf0-00hhp/08k6v-ut24f0-00834",
+    "category": "staff",
+    "enabled": true
+  },
+  {
+    "source_id": "prov_13_liveidx_lvl2_014",
+    "parent_source_id": "prov_13_liveidx",
+    "name": "prov_13_liveidx 二级入口 enterprise 14",
+    "source_type": "province_entry_probe_live",
+    "source_level": "C",
+    "base_url": "https://zjy.jxjst.gov.cn/w/cms/commonItemList/08j7v-mtxcf0-00hhp/08k81-w8xcf0-00t4s",
+    "category": "enterprise",
+    "enabled": true
+  },
+  {
+    "source_id": "prov_13_liveidx_lvl2_015",
+    "parent_source_id": "prov_13_liveidx",
+    "name": "prov_13_liveidx 二级入口 enterprise 15",
+    "source_type": "province_entry_probe_live",
+    "source_level": "C",
+    "base_url": "https://zjy.jxjst.gov.cn/w/cms/commonItemList/08j7v-rrarf0-00gmn/08k82-g520f0-007qe",
+    "category": "enterprise",
+    "enabled": true
+  },
+  {
+    "source_id": "prov_13_liveidx_lvl2_016",
+    "parent_source_id": "prov_13_liveidx",
+    "name": "prov_13_liveidx 二级入口 enterprise 16",
+    "source_type": "province_entry_probe_live",
+    "source_level": "C",
+    "base_url": "https://zjy.jxjst.gov.cn/w/cms/commonItemList/08j7v-rrarf0-00gmn/095h5-q400f0-004f5",
+    "category": "enterprise",
+    "enabled": true
+  },
+  {
+    "source_id": "prov_13_liveidx_lvl2_017",
+    "parent_source_id": "prov_13_liveidx",
+    "name": "prov_13_liveidx 二级入口 credit 17",
+    "source_type": "province_entry_probe_live",
+    "source_level": "C",
+    "base_url": "http://www.creditjx.gov.cn/",
+    "category": "credit",
+    "enabled": true
+  }
+]

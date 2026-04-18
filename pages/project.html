@@ -1,0 +1,148 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>项目详情 - 全国诚信市场建筑管理平台</title>
+    <link rel="stylesheet" href="../styles/main.css" />
+    <link rel="stylesheet" href="../styles/pages.css" />
+  </head>
+  <body>
+    <div class="bg-orb orb-a"></div>
+    <div class="bg-orb orb-b"></div>
+    <div class="grid-overlay"></div>
+
+    <header class="site-header">
+      <div class="container nav-wrap">
+        <a class="brand" href="../index.html">
+          <span class="brand-mark">CM</span>
+          <span class="brand-text">
+            <strong>全国诚信市场</strong>
+            <small>建筑管理平台</small>
+          </span>
+        </a>
+        <nav class="nav">
+          <a href="../index.html#overview">平台概览</a>
+          <a href="../index.html#modules">核心能力</a>
+          <a href="../index.html#dashboard">数据看板</a>
+          <a href="../index.html#registry">主体库</a>
+          <a href="../index.html#policies">政策法规</a>
+        </nav>
+      </div>
+    </header>
+
+    <main class="detail-page">
+      <div class="container" id="detailRoot" data-entity-type="tender">
+        <nav class="breadcrumb">
+          <a href="../index.html">首页</a>
+          <span>/</span>
+          <a href="../index.html#liveData">实时业务数据</a>
+          <span>/</span>
+          <strong>项目详情</strong>
+        </nav>
+
+        <section class="enterprise-header panel">
+          <div class="ent-basic">
+            <div class="ent-avatar">项目</div>
+            <div class="ent-info">
+              <h1 id="entityName">-</h1>
+              <p class="ent-code" id="entityCode">项目编号：-</p>
+              <div class="ent-tags">
+                <span class="tag-item tag-ok" id="badgeA">OPEN</span>
+                <span class="tag-item tag-accent" id="badgeB">项目</span>
+                <span class="tag-item tag-default" id="badgeC">全国</span>
+              </div>
+            </div>
+          </div>
+          <div class="ent-score">
+            <div class="score-ring" data-score="80">
+              <svg viewBox="0 0 120 120">
+                <circle cx="60" cy="60" r="52" fill="none" stroke="rgba(255,255,255,0.1)" stroke-width="8" />
+                <circle cx="60" cy="60" r="52" fill="none" stroke="url(#scoreGrad)" stroke-width="8"
+                  stroke-dasharray="326.7" stroke-dashoffset="65" stroke-linecap="round"
+                  transform="rotate(-90 60 60)" />
+                <defs>
+                  <linearGradient id="scoreGrad" x1="0" y1="0" x2="1" y2="1">
+                    <stop offset="0%" stop-color="#2b7de9" />
+                    <stop offset="100%" stop-color="#4a9af5" />
+                  </linearGradient>
+                </defs>
+              </svg>
+              <div class="score-text">
+                <b id="scoreValue">80</b>
+                <span>诚信指数</span>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="detail-tabs">
+          <button class="dtab active" data-panel="info">基本信息</button>
+          <button class="dtab" data-panel="credit">信用记录</button>
+          <button class="dtab" data-panel="projects">参与主体</button>
+          <button class="dtab" data-panel="penalty">风险情况</button>
+        </section>
+
+        <div class="detail-panels">
+          <article class="dpanel" id="panelInfo">
+            <div class="info-grid">
+              <div class="info-item"><label>项目名称</label><span id="fieldProjectName">-</span></div>
+              <div class="info-item"><label>项目编号</label><span id="fieldProjectCode">-</span></div>
+              <div class="info-item"><label>项目类别</label><span id="fieldProjectType">-</span></div>
+              <div class="info-item"><label>建设单位</label><span id="fieldBuilder">-</span></div>
+              <div class="info-item"><label>数据等级</label><span id="fieldDataLevel">-</span></div>
+              <div class="info-item"><label>是否疑似异常</label><span id="fieldIsFake">-</span></div>
+              <div class="info-item"><label>地区</label><span id="fieldRegion">-</span></div>
+              <div class="info-item"><label>采集日期</label><span id="fieldDate">-</span></div>
+              <div class="info-item"><label>来源URL</label><span id="fieldSource">-</span></div>
+            </div>
+          </article>
+
+          <article class="dpanel hidden" id="panelCredit">
+            <div class="empty-state">
+              <div class="empty-icon">&#128221;</div>
+              <h3>信用记录接入中</h3>
+              <p>当前页面展示实时基础数据，项目信用明细将在下一轮采集接入。</p>
+            </div>
+          </article>
+
+          <article class="dpanel hidden" id="panelProjects">
+            <div class="empty-state">
+              <div class="empty-icon">&#128119;</div>
+              <h3>参与主体接入中</h3>
+              <p>将从项目明细接口补充施工单位、监理单位与关键岗位人员。</p>
+            </div>
+          </article>
+
+          <article class="dpanel hidden" id="panelPenalty">
+            <div class="empty-state">
+              <div class="empty-icon">&#9888;</div>
+              <h3>风险字段接入中</h3>
+              <p>将从项目核验与异常接口补充风险状态、处置进度与整改记录。</p>
+            </div>
+          </article>
+        </div>
+
+        <section class="panel" style="margin-top: 18px">
+          <h3 style="margin-top: 0">省市源站实时查询入口</h3>
+          <div class="source-routes" id="sourceRoutes"></div>
+        </section>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div class="container footer-wrap">
+        <div>
+          <h2>全国诚信市场建筑管理平台主管中心</h2>
+          <p>服务电话：400-010-8899</p>
+        </div>
+        <div>
+          <p class="copy">&copy; <span id="year"></span> 全国诚信市场建筑管理平台</p>
+        </div>
+      </div>
+    </footer>
+
+    <script src="../scripts/main.js"></script>
+    <script src="../scripts/detail.js"></script>
+  </body>
+</html>

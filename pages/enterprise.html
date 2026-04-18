@@ -1,0 +1,145 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>企业详细信息查看 - 全国诚信市场建筑管理平台</title>
+    <link rel="stylesheet" href="../styles/main.css" />
+    <link rel="stylesheet" href="../styles/pages.css" />
+  </head>
+  <body>
+    <div class="bg-orb orb-a"></div>
+    <div class="bg-orb orb-b"></div>
+
+    <header class="site-header">
+      <div class="container nav-wrap">
+        <a class="brand" href="../index.html">
+          <span class="brand-mark">CM</span>
+          <span class="brand-text">
+            <strong>全国诚信市场</strong>
+            <small>建筑管理平台</small>
+          </span>
+        </a>
+        <nav class="nav">
+          <a href="../index.html#overview">首页</a>
+          <a href="../index.html#registry">企业库</a>
+          <a href="../index.html#liveData">实时数据</a>
+        </nav>
+      </div>
+    </header>
+
+    <main class="detail-page gov-page">
+      <div class="container gov-wrap" id="detailRoot" data-entity-type="enterprise">
+        <div class="gov-breadcrumb">
+          当前位置：
+          <a href="../index.html">首页</a>
+          <span>&gt;</span>
+          <a href="../index.html#liveData">企业信息</a>
+          <span>&gt;</span>
+          <strong>企业详细信息查看</strong>
+        </div>
+
+        <section class="gov-section">
+          <h1 class="gov-title">企业详细信息查看</h1>
+        </section>
+
+        <section class="gov-section">
+          <h2 class="gov-subtitle">企业基本信息</h2>
+          <table class="gov-table">
+            <tbody>
+              <tr>
+                <th>企业名称</th>
+                <td id="fieldName">-</td>
+                <th>统一社会信用代码</th>
+                <td id="fieldUscc">-</td>
+              </tr>
+              <tr>
+                <th>法定代表人</th>
+                <td id="fieldLegal">-</td>
+                <th>企业属地</th>
+                <td id="fieldRegion">-</td>
+              </tr>
+              <tr>
+                <th>平台企业ID</th>
+                <td id="fieldSourceId">-</td>
+                <th>历史代码</th>
+                <td id="fieldOldCode">-</td>
+              </tr>
+              <tr>
+                <th>采集日期</th>
+                <td id="fieldDate">-</td>
+                <th>状态</th>
+                <td id="fieldStatus">-</td>
+              </tr>
+              <tr>
+                <th>来源URL</th>
+                <td id="fieldSource" colspan="3">-</td>
+              </tr>
+            </tbody>
+          </table>
+        </section>
+
+        <section class="gov-section">
+          <h2 class="gov-subtitle">企业详细信息（业务项）</h2>
+          <div class="gov-tabs">
+            <button class="dtab active" data-panel="license">企业资质</button>
+            <button class="dtab" data-panel="staff">注册人员</button>
+            <button class="dtab" data-panel="project">工程项目</button>
+            <button class="dtab" data-panel="credit">信用记录</button>
+          </div>
+
+          <article class="dpanel" id="panelLicense">
+            <table class="gov-table">
+              <tbody>
+                <tr>
+                  <th>业务类型</th>
+                  <td>企业资质信息</td>
+                  <th>当前状态</th>
+                  <td id="badgeA">ACTIVE</td>
+                </tr>
+                <tr>
+                  <th>数据来源</th>
+                  <td id="badgeB">jzsc_company_list</td>
+                  <th>更新时间</th>
+                  <td id="badgeC">-</td>
+                </tr>
+              </tbody>
+            </table>
+          </article>
+
+          <article class="dpanel hidden" id="panelStaff">
+            <div class="gov-empty">注册人员数据通过“人员详情页”按姓名点击查询展示。</div>
+          </article>
+
+          <article class="dpanel hidden" id="panelProject">
+            <div class="gov-empty">工程项目数据通过“项目详情页”按项目名称点击查询展示。</div>
+          </article>
+
+          <article class="dpanel hidden" id="panelCredit">
+            <div class="gov-empty">信用记录接口字段正在扩展，当前已完成企业主档与来源追溯。</div>
+          </article>
+        </section>
+
+        <section class="gov-section">
+          <h2 class="gov-subtitle">省市源站实时查询入口</h2>
+          <div class="source-routes" id="sourceRoutes"></div>
+        </section>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div class="container footer-wrap">
+        <div>
+          <h2>全国诚信市场建筑管理平台主管中心</h2>
+          <p>服务电话：400-010-8899</p>
+        </div>
+        <div>
+          <p class="copy">&copy; <span id="year"></span> 全国诚信市场建筑管理平台</p>
+        </div>
+      </div>
+    </footer>
+
+    <script src="../scripts/main.js"></script>
+    <script src="../scripts/detail.js"></script>
+  </body>
+</html>

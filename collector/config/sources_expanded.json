@@ -1,0 +1,152 @@
+[
+  {
+    "source_id": "jzsc_company_live",
+    "name": "四库一平台-建筑企业真实数据",
+    "source_type": "jzsc_company_live",
+    "source_level": "A",
+    "base_url": "https://jzsc.mohurd.gov.cn",
+    "province_code": "000000",
+    "city_code": "110000",
+    "enabled": true
+  },
+  {
+    "source_id": "jzsc_staff_live",
+    "name": "四库一平台-从业人员真实数据",
+    "source_type": "jzsc_staff_live",
+    "source_level": "B",
+    "base_url": "https://jzsc.mohurd.gov.cn",
+    "province_code": "000000",
+    "city_code": "110000",
+    "enabled": true
+  },
+  {
+    "source_id": "jzsc_project_live",
+    "name": "四库一平台-项目/招采真实数据",
+    "source_type": "jzsc_project_live",
+    "source_level": "B",
+    "base_url": "https://jzsc.mohurd.gov.cn",
+    "province_code": "000000",
+    "city_code": "110000",
+    "enabled": true
+  },
+  {
+    "source_id": "prov_04_liveidx",
+    "name": "内蒙古省级平台入口索引",
+    "source_type": "province_portal_index_live",
+    "source_level": "B",
+    "base_url": "http://110.16.70.26:82/nmjgpublish/index.html",
+    "province_code": "000000",
+    "city_code": "000000",
+    "enabled": true
+  },
+  {
+    "source_id": "prov_06_liveidx",
+    "name": "吉林省级平台入口索引",
+    "source_type": "province_portal_index_live",
+    "source_level": "B",
+    "base_url": "https://cx.jlsjsxxw.com:8084/",
+    "province_code": "000000",
+    "city_code": "000000",
+    "enabled": true
+  },
+  {
+    "source_id": "prov_22_liveidx",
+    "name": "四川省级平台入口索引",
+    "source_type": "province_portal_index_live",
+    "source_level": "B",
+    "base_url": "http://202.61.88.188/xmgk/yth/index.aspx",
+    "province_code": "000000",
+    "city_code": "000000",
+    "enabled": true
+  },
+  {
+    "source_id": "prov_14_liveidx",
+    "name": "山东省级平台入口索引",
+    "source_type": "province_portal_index_live",
+    "source_level": "B",
+    "base_url": "http://221.214.94.41:81/xyzj/DTFront/ZongHeSearch/?searchType=1",
+    "province_code": "000000",
+    "city_code": "000000",
+    "enabled": true
+  },
+  {
+    "source_id": "prov_03_liveidx",
+    "name": "山西省级平台入口索引",
+    "source_type": "province_portal_index_live",
+    "source_level": "B",
+    "base_url": "http://183.201.195.143:28800/webserver/publish/index.html",
+    "province_code": "000000",
+    "city_code": "000000",
+    "enabled": true
+  },
+  {
+    "source_id": "prov_02_liveidx",
+    "name": "河北省级平台入口索引",
+    "source_type": "province_portal_index_live",
+    "source_level": "B",
+    "base_url": "http://121.29.49.134:18000/",
+    "province_code": "000000",
+    "city_code": "000000",
+    "enabled": true
+  },
+  {
+    "source_id": "prov_15_liveidx",
+    "name": "河南省级平台入口索引",
+    "source_type": "province_portal_index_live",
+    "source_level": "B",
+    "base_url": "http://hngcjs.hnjs.henan.gov.cn/",
+    "province_code": "000000",
+    "city_code": "000000",
+    "enabled": true
+  },
+  {
+    "source_id": "prov_10_liveidx",
+    "name": "浙江省级平台入口索引",
+    "source_type": "province_portal_index_live",
+    "source_level": "B",
+    "base_url": "https://jzsc.jst.zj.gov.cn/PublicWeb/index.html",
+    "province_code": "000000",
+    "city_code": "000000",
+    "enabled": true
+  },
+  {
+    "source_id": "prov_17_liveidx",
+    "name": "湖南省级平台入口索引",
+    "source_type": "province_portal_index_live",
+    "source_level": "B",
+    "base_url": "https://gcxm.hunanjs.gov.cn:443/",
+    "province_code": "000000",
+    "city_code": "000000",
+    "enabled": true
+  },
+  {
+    "source_id": "prov_12_liveidx",
+    "name": "福建省级平台入口索引",
+    "source_type": "province_portal_index_live",
+    "source_level": "B",
+    "base_url": "https://220.160.52.164:20082/login",
+    "province_code": "000000",
+    "city_code": "000000",
+    "enabled": true
+  },
+  {
+    "source_id": "prov_05_liveidx",
+    "name": "辽宁省级平台入口索引",
+    "source_type": "province_portal_index_live",
+    "source_level": "B",
+    "base_url": "http://218.60.154.1:81/webserver/lnpublish/index.html",
+    "province_code": "000000",
+    "city_code": "000000",
+    "enabled": true
+  },
+  {
+    "source_id": "prov_28_liveidx",
+    "name": "青海省级平台入口索引",
+    "source_type": "province_portal_index_live",
+    "source_level": "B",
+    "base_url": "http://139.170.150.135/asite/cloud/index",
+    "province_code": "000000",
+    "city_code": "000000",
+    "enabled": true
+  }
+]

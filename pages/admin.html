@@ -1,0 +1,279 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>管理后台 - 全国诚信市场建筑管理平台</title>
+    <link rel="stylesheet" href="../styles/main.css" />
+    <link rel="stylesheet" href="../styles/pages.css" />
+  </head>
+  <body class="admin-body">
+    <aside class="admin-sidebar">
+      <div class="sidebar-brand">
+        <span class="brand-mark">CM</span>
+        <span>管理后台</span>
+      </div>
+      <nav class="sidebar-nav">
+        <a href="#" class="sidebar-link active" data-section="overview">
+          <span class="sidebar-icon">&#9632;</span> 工作台
+        </a>
+        <a href="#" class="sidebar-link" data-section="enterprises">
+          <span class="sidebar-icon">&#9881;</span> 企业管理
+        </a>
+        <a href="#" class="sidebar-link" data-section="warnings">
+          <span class="sidebar-icon">&#9888;</span> 预警处置
+        </a>
+        <a href="#" class="sidebar-link" data-section="penalties">
+          <span class="sidebar-icon">&#9878;</span> 惩戒管理
+        </a>
+        <a href="#" class="sidebar-link" data-section="projects">
+          <span class="sidebar-icon">&#9733;</span> 项目监管
+        </a>
+        <a href="#" class="sidebar-link" data-section="users">
+          <span class="sidebar-icon">&#9787;</span> 用户管理
+        </a>
+      </nav>
+      <div class="sidebar-footer">
+        <a href="../index.html" class="sidebar-link">&#8592; 返回前台</a>
+      </div>
+    </aside>
+
+    <div class="admin-main">
+      <header class="admin-header">
+        <h1 id="adminTitle">工作台</h1>
+        <div class="admin-user">
+          <span>管理员</span>
+          <a href="login.html" class="link">退出</a>
+        </div>
+      </header>
+
+      <main class="admin-content">
+        <!-- 工作台 -->
+        <section class="admin-section" id="secOverview">
+          <div class="admin-stats">
+            <div class="admin-stat">
+              <p>待审核企业</p>
+              <h3>23</h3>
+            </div>
+            <div class="admin-stat">
+              <p>待处置预警</p>
+              <h3>156</h3>
+            </div>
+            <div class="admin-stat">
+              <p>惩戒执行中</p>
+              <h3>4,216</h3>
+            </div>
+            <div class="admin-stat">
+              <p>今日登录用户</p>
+              <h3>1,847</h3>
+            </div>
+          </div>
+
+          <article class="panel" style="margin-top:24px">
+            <h3>最近操作记录</h3>
+            <table class="detail-table">
+              <thead>
+                <tr><th>时间</th><th>操作人</th><th>操作</th><th>对象</th></tr>
+              </thead>
+              <tbody>
+                <tr><td>2026-04-16 09:32</td><td>张管理员</td><td>审核通过</td><td>某某建设有限公司备案申请</td></tr>
+                <tr><td>2026-04-16 09:15</td><td>李管理员</td><td>预警处置</td><td>华南区域质量风险预警 #W-2026-0892</td></tr>
+                <tr><td>2026-04-16 08:48</td><td>系统</td><td>自动同步</td><td>华东区域企业信用数据更新</td></tr>
+                <tr><td>2026-04-15 17:30</td><td>王管理员</td><td>惩戒录入</td><td>某某施工队安全违规联合惩戒</td></tr>
+              </tbody>
+            </table>
+          </article>
+        </section>
+
+        <!-- 企业管理 -->
+        <section class="admin-section hidden" id="secEnterprises">
+          <div class="admin-toolbar">
+            <input type="text" placeholder="搜索企业名称或信用代码..." class="admin-search" />
+            <button class="btn btn-primary">+ 新增企业</button>
+          </div>
+          <article class="panel">
+            <table class="detail-table">
+              <thead>
+                <tr><th>企业名称</th><th>信用代码</th><th>信用等级</th><th>状态</th><th>操作</th></tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>中建某某工程有限公司</td>
+                  <td>91310000MA1FL8X72K</td>
+                  <td>AAA</td>
+                  <td><span class="status ok">已备案</span></td>
+                  <td><a href="enterprise.html" class="link">查看</a></td>
+                </tr>
+                <tr>
+                  <td>某某建设集团有限公司</td>
+                  <td>91440300MA5FW2J31R</td>
+                  <td>AA</td>
+                  <td><span class="status ok">已备案</span></td>
+                  <td><a href="enterprise.html" class="link">查看</a></td>
+                </tr>
+                <tr>
+                  <td>某某工程监理有限公司</td>
+                  <td>91510100MA6CW7H54T</td>
+                  <td>A</td>
+                  <td><span class="status warn">待审核</span></td>
+                  <td><a href="#" class="link">审核</a></td>
+                </tr>
+              </tbody>
+            </table>
+          </article>
+        </section>
+
+        <!-- 预警处置 -->
+        <section class="admin-section hidden" id="secWarnings">
+          <div class="admin-toolbar">
+            <select class="admin-select">
+              <option>全部预警</option>
+              <option>质量风险</option>
+              <option>安全风险</option>
+              <option>履约风险</option>
+              <option>资金风险</option>
+            </select>
+            <select class="admin-select">
+              <option>全部状态</option>
+              <option>待处置</option>
+              <option>处理中</option>
+              <option>已处置</option>
+            </select>
+          </div>
+          <article class="panel">
+            <table class="detail-table">
+              <thead>
+                <tr><th>预警编号</th><th>类型</th><th>地区</th><th>涉及企业</th><th>等级</th><th>状态</th><th>操作</th></tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>W-2026-0892</td>
+                  <td>质量风险</td>
+                  <td>华南</td>
+                  <td>某某建设集团</td>
+                  <td><span class="status warn">高</span></td>
+                  <td>待处置</td>
+                  <td><a href="#" class="link">处置</a></td>
+                </tr>
+                <tr>
+                  <td>W-2026-0887</td>
+                  <td>履约风险</td>
+                  <td>华东</td>
+                  <td>某某工程公司</td>
+                  <td><span class="status info">中</span></td>
+                  <td>处理中</td>
+                  <td><a href="#" class="link">查看</a></td>
+                </tr>
+                <tr>
+                  <td>W-2026-0881</td>
+                  <td>安全风险</td>
+                  <td>华北</td>
+                  <td>某某施工队</td>
+                  <td><span class="status warn">高</span></td>
+                  <td>待处置</td>
+                  <td><a href="#" class="link">处置</a></td>
+                </tr>
+              </tbody>
+            </table>
+          </article>
+        </section>
+
+        <!-- 惩戒管理 -->
+        <section class="admin-section hidden" id="secPenalties">
+          <article class="panel">
+            <h3>联合惩戒执行情况</h3>
+            <table class="detail-table">
+              <thead>
+                <tr><th>惩戒编号</th><th>企业</th><th>惩戒措施</th><th>执行部门</th><th>起始日期</th><th>状态</th></tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>CJ-2026-0342</td>
+                  <td>某某施工队</td>
+                  <td>限制招投标</td>
+                  <td>住建部</td>
+                  <td>2026-03-15</td>
+                  <td><span class="status warn">执行中</span></td>
+                </tr>
+                <tr>
+                  <td>CJ-2026-0318</td>
+                  <td>某某地产公司</td>
+                  <td>重点监管</td>
+                  <td>市场监管总局</td>
+                  <td>2026-03-01</td>
+                  <td><span class="status warn">执行中</span></td>
+                </tr>
+              </tbody>
+            </table>
+          </article>
+        </section>
+
+        <!-- 项目监管 -->
+        <section class="admin-section hidden" id="secProjects">
+          <article class="panel">
+            <h3>重点监管项目</h3>
+            <table class="detail-table">
+              <thead>
+                <tr><th>项目名称</th><th>地区</th><th>承建企业</th><th>合同额(万元)</th><th>监管状态</th></tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>某某城际铁路枢纽工程</td>
+                  <td>江苏</td>
+                  <td>中建某某工程有限公司</td>
+                  <td>256,000</td>
+                  <td><span class="status info">重点监管</span></td>
+                </tr>
+                <tr>
+                  <td>某某新区综合商务中心</td>
+                  <td>上海</td>
+                  <td>某某建设集团</td>
+                  <td>128,000</td>
+                  <td><span class="status ok">常规监管</span></td>
+                </tr>
+              </tbody>
+            </table>
+          </article>
+        </section>
+
+        <!-- 用户管理 -->
+        <section class="admin-section hidden" id="secUsers">
+          <article class="panel">
+            <h3>平台用户列表</h3>
+            <table class="detail-table">
+              <thead>
+                <tr><th>用户名</th><th>所属单位</th><th>角色</th><th>最后登录</th><th>状态</th></tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>zhangadmin</td>
+                  <td>平台管理中心</td>
+                  <td>超级管理员</td>
+                  <td>2026-04-16 09:32</td>
+                  <td><span class="status ok">正常</span></td>
+                </tr>
+                <tr>
+                  <td>lichecker</td>
+                  <td>华东区域办</td>
+                  <td>审核员</td>
+                  <td>2026-04-16 09:15</td>
+                  <td><span class="status ok">正常</span></td>
+                </tr>
+                <tr>
+                  <td>wangreviewer</td>
+                  <td>华南区域办</td>
+                  <td>审核员</td>
+                  <td>2026-04-15 17:30</td>
+                  <td><span class="status ok">正常</span></td>
+                </tr>
+              </tbody>
+            </table>
+          </article>
+        </section>
+      </main>
+    </div>
+
+    <script src="../scripts/main.js"></script>
+    <script src="../scripts/admin.js"></script>
+  </body>
+</html>

@@ -1,0 +1,242 @@
+[
+  {
+    "province": "天津",
+    "url": "https://szzj.zfcxjs.tj.gov.cn:30479/",
+    "source_id": "prov_01",
+    "source_level": "B",
+    "source_type": "province_portal_index",
+    "enabled": true
+  },
+  {
+    "province": "河北",
+    "url": "http://121.29.49.134:18000/",
+    "source_id": "prov_02",
+    "source_level": "B",
+    "source_type": "province_portal_index",
+    "enabled": true
+  },
+  {
+    "province": "山西",
+    "url": "http://183.201.195.143:28800/webserver/publish/index.html",
+    "source_id": "prov_03",
+    "source_level": "B",
+    "source_type": "province_portal_index",
+    "enabled": true
+  },
+  {
+    "province": "内蒙古",
+    "url": "http://110.16.70.26:82/nmjgpublish/index.html",
+    "source_id": "prov_04",
+    "source_level": "B",
+    "source_type": "province_portal_index",
+    "enabled": true
+  },
+  {
+    "province": "辽宁",
+    "url": "http://218.60.154.1:81/webserver/lnpublish/index.html",
+    "source_id": "prov_05",
+    "source_level": "B",
+    "source_type": "province_portal_index",
+    "enabled": true
+  },
+  {
+    "province": "吉林",
+    "url": "http://cx.jlsjsxxw.com",
+    "source_id": "prov_06",
+    "source_level": "B",
+    "source_type": "province_portal_index",
+    "enabled": true
+  },
+  {
+    "province": "黑龙江",
+    "url": "http://112.103.231.221:8095/cmspsp/indexAction_queryHomeData.action",
+    "source_id": "prov_07",
+    "source_level": "B",
+    "source_type": "province_portal_index",
+    "enabled": true
+  },
+  {
+    "province": "上海",
+    "url": "http://zjw.sh.gov.cn/",
+    "source_id": "prov_08",
+    "source_level": "B",
+    "source_type": "province_portal_index",
+    "enabled": true
+  },
+  {
+    "province": "江苏",
+    "url": "http://58.213.147.230:7001/Jsjzyxyglpt/faces/public/default.jsp",
+    "source_id": "prov_09",
+    "source_level": "B",
+    "source_type": "province_portal_index",
+    "enabled": true
+  },
+  {
+    "province": "浙江",
+    "url": "https://jzsc.jst.zj.gov.cn/PublicWeb/index.html",
+    "source_id": "prov_10",
+    "source_level": "B",
+    "source_type": "province_portal_index",
+    "enabled": true
+  },
+  {
+    "province": "安徽",
+    "url": "http://dohurd.ah.gov.cn/zwfw/xtbgpt/index.html",
+    "source_id": "prov_11",
+    "source_level": "B",
+    "source_type": "province_portal_index",
+    "enabled": true
+  },
+  {
+    "province": "福建",
+    "url": "https://220.160.52.164:20082/login",
+    "source_id": "prov_12",
+    "source_level": "B",
+    "source_type": "province_portal_index",
+    "enabled": true
+  },
+  {
+    "province": "江西",
+    "url": "http://zjy.jxjst.gov.cn/",
+    "source_id": "prov_13",
+    "source_level": "B",
+    "source_type": "province_portal_index",
+    "enabled": true
+  },
+  {
+    "province": "山东",
+    "url": "http://221.214.94.41:81/xyzj/DTFront/ZongHeSearch/?searchType=1",
+    "source_id": "prov_14",
+    "source_level": "B",
+    "source_type": "province_portal_index",
+    "enabled": true
+  },
+  {
+    "province": "河南",
+    "url": "http://hngcjs.hnjs.henan.gov.cn/",
+    "source_id": "prov_15",
+    "source_level": "B",
+    "source_type": "province_portal_index",
+    "enabled": true
+  },
+  {
+    "province": "湖北",
+    "url": "http://jg.hbcic.net.cn/web/",
+    "source_id": "prov_16",
+    "source_level": "B",
+    "source_type": "province_portal_index",
+    "enabled": true
+  },
+  {
+    "province": "湖南",
+    "url": "http://gcxm.hunanjs.gov.cn/",
+    "source_id": "prov_17",
+    "source_level": "B",
+    "source_type": "province_portal_index",
+    "enabled": true
+  },
+  {
+    "province": "广东",
+    "url": "https://scjg.gdcic.net/",
+    "source_id": "prov_18",
+    "source_level": "B",
+    "source_type": "province_portal_index",
+    "enabled": true
+  },
+  {
+    "province": "广西",
+    "url": "https://gxjzsc.gxcic.net/",
+    "source_id": "prov_19",
+    "source_level": "B",
+    "source_type": "province_portal_index",
+    "enabled": true
+  },
+  {
+    "province": "海南",
+    "url": "http://www.hizj.net:8008/PublishWeb/Default.aspx",
+    "source_id": "prov_20",
+    "source_level": "B",
+    "source_type": "province_portal_index",
+    "enabled": true
+  },
+  {
+    "province": "重庆",
+    "url": "http://www.cqjsxx.com/webcqjg/Index.aspx",
+    "source_id": "prov_21",
+    "source_level": "B",
+    "source_type": "province_portal_index",
+    "enabled": true
+  },
+  {
+    "province": "四川",
+    "url": "http://202.61.88.188/xmgk/yth/index.aspx",
+    "source_id": "prov_22",
+    "source_level": "B",
+    "source_type": "province_portal_index",
+    "enabled": true
+  },
+  {
+    "province": "贵州",
+    "url": "http://61.243.11.50:8088/GZZHXT/Index.html",
+    "source_id": "prov_23",
+    "source_level": "B",
+    "source_type": "province_portal_index",
+    "enabled": true
+  },
+  {
+    "province": "云南",
+    "url": "http://www.ynjzjgcx.com/",
+    "source_id": "prov_24",
+    "source_level": "B",
+    "source_type": "province_portal_index",
+    "enabled": true
+  },
+  {
+    "province": "西藏",
+    "url": "http://zjt.xizang.gov.cn/",
+    "source_id": "prov_25",
+    "source_level": "B",
+    "source_type": "province_portal_index",
+    "enabled": true
+  },
+  {
+    "province": "陕西",
+    "url": "http://jzscyth.shaanxi.gov.cn:7001/PDR/network/credit/home",
+    "source_id": "prov_26",
+    "source_level": "B",
+    "source_type": "province_portal_index",
+    "enabled": true
+  },
+  {
+    "province": "甘肃",
+    "url": "http://zjt.gansu.gov.cn/",
+    "source_id": "prov_27",
+    "source_level": "B",
+    "source_type": "province_portal_index",
+    "enabled": true
+  },
+  {
+    "province": "青海",
+    "url": "http://139.170.150.135/asite/cloud/index",
+    "source_id": "prov_28",
+    "source_level": "B",
+    "source_type": "province_portal_index",
+    "enabled": true
+  },
+  {
+    "province": "宁夏",
+    "url": "http://www.nxjscx.com.cn/index.htm",
+    "source_id": "prov_29",
+    "source_level": "B",
+    "source_type": "province_portal_index",
+    "enabled": true
+  },
+  {
+    "province": "新疆",
+    "url": "http://jsy.xjjs.gov.cn/asite/cloud/index",
+    "source_id": "prov_30",
+    "source_level": "B",
+    "source_type": "province_portal_index",
+    "enabled": true
+  }
+]

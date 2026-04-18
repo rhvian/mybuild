@@ -1,0 +1,115 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>登录 - 全国诚信市场建筑管理平台</title>
+    <link rel="stylesheet" href="../styles/main.css" />
+    <link rel="stylesheet" href="../styles/pages.css" />
+  </head>
+  <body>
+    <div class="bg-orb orb-a"></div>
+    <div class="bg-orb orb-b"></div>
+    <div class="grid-overlay"></div>
+
+    <header class="site-header">
+      <div class="container nav-wrap">
+        <a class="brand" href="../index.html">
+          <span class="brand-mark">CM</span>
+          <span class="brand-text">
+            <strong>全国诚信市场</strong>
+            <small>建筑管理平台</small>
+          </span>
+        </a>
+        <nav class="nav">
+          <a href="../index.html#overview">平台概览</a>
+          <a href="../index.html#modules">核心能力</a>
+          <a href="../index.html#dashboard">数据看板</a>
+          <a href="../index.html#registry">主体库</a>
+          <a href="../index.html#policies">政策法规</a>
+        </nav>
+      </div>
+    </header>
+
+    <main class="auth-page">
+      <div class="auth-container">
+        <div class="auth-tabs">
+          <button class="auth-tab active" data-tab="login">账号登录</button>
+          <button class="auth-tab" data-tab="register">用户注册</button>
+        </div>
+
+        <form class="auth-form" id="loginForm">
+          <div class="form-group">
+            <label for="loginUser">用户名 / 手机号</label>
+            <input id="loginUser" type="text" placeholder="请输入用户名或手机号" required />
+          </div>
+          <div class="form-group">
+            <label for="loginPass">密码</label>
+            <div class="password-wrap">
+              <input id="loginPass" type="password" placeholder="请输入密码" required />
+              <button type="button" class="toggle-pass" aria-label="显示密码">&#128065;</button>
+            </div>
+          </div>
+          <div class="form-options">
+            <label class="checkbox-label">
+              <input type="checkbox" /> 记住登录
+            </label>
+            <a href="#" class="link">忘记密码？</a>
+          </div>
+          <button class="btn btn-primary btn-block" type="submit">登 录</button>
+          <div class="auth-divider"><span>其他方式</span></div>
+          <div class="social-login">
+            <button type="button" class="btn btn-secondary btn-social">政务钉钉</button>
+            <button type="button" class="btn btn-secondary btn-social">统一身份认证</button>
+          </div>
+        </form>
+
+        <form class="auth-form hidden" id="registerForm">
+          <div class="form-group">
+            <label for="regName">单位全称</label>
+            <input id="regName" type="text" placeholder="请输入单位全称" required />
+          </div>
+          <div class="form-group">
+            <label for="regCode">统一社会信用代码</label>
+            <input id="regCode" type="text" placeholder="18位统一社会信用代码" maxlength="18" required />
+          </div>
+          <div class="form-group">
+            <label for="regPhone">手机号</label>
+            <input id="regPhone" type="tel" placeholder="请输入手机号" maxlength="11" required />
+          </div>
+          <div class="form-group">
+            <label for="regPass">设置密码</label>
+            <input id="regPass" type="password" placeholder="8-20位，含字母和数字" required />
+          </div>
+          <div class="form-group">
+            <label for="regPass2">确认密码</label>
+            <input id="regPass2" type="password" placeholder="再次输入密码" required />
+          </div>
+          <div class="form-options">
+            <label class="checkbox-label">
+              <input type="checkbox" required /> 我已阅读并同意<a href="#" class="link">《平台服务协议》</a>
+            </label>
+          </div>
+          <button class="btn btn-primary btn-block" type="submit">注 册</button>
+        </form>
+
+        <p class="auth-msg" id="authMsg"></p>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div class="container footer-wrap">
+        <div>
+          <h2>全国诚信市场建筑管理平台主管中心</h2>
+          <p>服务电话：400-010-8899</p>
+        </div>
+        <div>
+          <p class="copy">&copy; <span id="year"></span> 全国诚信市场建筑管理平台</p>
+        </div>
+      </div>
+    </footer>
+
+    <script src="../scripts/main.js"></script>
+    <script src="../scripts/auth.js"></script>
+  </body>
+</html>

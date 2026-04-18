@@ -1,0 +1,277 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>全国诚信市场建筑管理平台</title>
+    <meta
+      name="description"
+      content="全国诚信市场建筑管理平台，提供建筑企业诚信档案、项目监管、风险预警、政策法规与公众查询服务。"
+    />
+    <link rel="stylesheet" href="./styles/main.css" />
+  </head>
+  <body>
+    <div class="bg-orb orb-a"></div>
+    <div class="bg-orb orb-b"></div>
+    <div class="grid-overlay"></div>
+
+    <header class="site-header">
+      <div class="container nav-wrap">
+        <a class="brand" href="#home">
+          <span class="brand-mark">CM</span>
+          <span class="brand-text">
+            <strong>全国诚信市场</strong>
+            <small>建筑管理平台</small>
+          </span>
+        </a>
+        <nav class="nav" id="mainNav">
+          <a href="#overview" data-section="overview">平台概览</a>
+          <a href="#modules" data-section="modules">核心能力</a>
+          <a href="#dashboard" data-section="dashboard">数据看板</a>
+          <a href="#registry" data-section="registry">主体库</a>
+          <a href="#policies" data-section="policies">政策法规</a>
+          <a href="pages/login.html">登录</a>
+        </nav>
+        <button class="menu-toggle" id="menuToggle" aria-label="菜单">
+          <span></span><span></span><span></span>
+        </button>
+      </div>
+      <nav class="mobile-nav" id="mobileNav">
+        <a href="#overview">平台概览</a>
+        <a href="#modules">核心能力</a>
+        <a href="#dashboard">数据看板</a>
+        <a href="#registry">主体库</a>
+        <a href="#policies">政策法规</a>
+        <a href="pages/login.html">登录</a>
+      </nav>
+    </header>
+
+    <main id="home">
+      <section class="hero container">
+        <div class="hero-left reveal">
+          <p class="eyebrow">国家级行业治理门户</p>
+          <h1>全国诚信市场建筑管理平台</h1>
+          <p class="hero-desc">
+            面向全国建筑市场主体，统一接入企业信用档案、项目履约数据、监管执法信息与联合惩戒机制，
+            形成可查询、可追溯、可预警的诚信治理体系。
+          </p>
+          <div class="hero-actions">
+            <a class="btn btn-primary" href="#registry">进入主体查询</a>
+            <a class="btn btn-secondary" href="pages/dashboard.html">查看数据看板</a>
+          </div>
+        </div>
+        <div class="hero-right reveal delay-1">
+          <article class="panel spotlight">
+            <h2>本月监管重点</h2>
+            <ul>
+              <li>跨省项目履约数据核验</li>
+              <li>失信企业分级处置同步</li>
+              <li>招投标异常行为实时预警</li>
+            </ul>
+            <p class="tag">更新于 <span id="today"></span></p>
+          </article>
+        </div>
+      </section>
+
+      <section id="overview" class="stats container">
+        <article class="stat-card reveal">
+          <p>覆盖省级行政区</p>
+          <h3 data-counter="34">0</h3>
+          <span>含直辖市、自治区、特别行政区</span>
+        </article>
+        <article class="stat-card reveal delay-1">
+          <p>平台备案企业</p>
+          <h3 data-counter="2487302">0</h3>
+          <span>施工、监理、勘察设计等市场主体</span>
+        </article>
+        <article class="stat-card reveal delay-2">
+          <p>本月风险预警</p>
+          <h3 data-counter="9842">0</h3>
+          <span>质量、安全、履约、资金风险联动</span>
+        </article>
+        <article class="stat-card reveal delay-3">
+          <p>诚信评级更新</p>
+          <h3 data-counter="184320">0</h3>
+          <span>企业级和项目级信用记录同步</span>
+        </article>
+      </section>
+
+      <section id="modules" class="modules container">
+        <div class="section-head reveal">
+          <p class="eyebrow">核心能力矩阵</p>
+          <h2>全流程建筑市场诚信治理</h2>
+        </div>
+        <div class="module-grid">
+          <article class="module-card reveal">
+            <h3>主体信用档案</h3>
+            <p>统一展示企业资质、行政处罚、履约评价、纠纷记录与整改闭环。</p>
+          </article>
+          <article class="module-card reveal delay-1">
+            <h3>工程项目监管</h3>
+            <p>关联项目立项、招采、施工、验收全链路数据，支持跨区域核验。</p>
+          </article>
+          <article class="module-card reveal delay-2">
+            <h3>失信惩戒联动</h3>
+            <p>接入多部门惩戒规则，自动触发限制参与招投标和重点监管措施。</p>
+          </article>
+          <article class="module-card reveal">
+            <h3>招采透明追溯</h3>
+            <p>沉淀招投标过程数据，识别围标串标、资质挂靠等异常模式。</p>
+          </article>
+          <article class="module-card reveal delay-1">
+            <h3>风险预警中台</h3>
+            <p>通过规则引擎与行为模型，形成风险分级告警和处置任务派发。</p>
+          </article>
+          <article class="module-card reveal delay-2">
+            <h3>公众查询服务</h3>
+            <p>提供企业诚信公示、项目状态公开、信用承诺核验等便民入口。</p>
+          </article>
+        </div>
+      </section>
+
+      <section id="dashboard" class="dashboard container">
+        <div class="section-head reveal">
+          <p class="eyebrow">全国数据看板</p>
+          <h2>诚信指数与风险态势</h2>
+        </div>
+        <div class="dashboard-grid">
+          <article class="panel reveal">
+            <h3>省域诚信指数 Top5</h3>
+            <ol>
+              <li><span>江苏</span><b>96.4</b></li>
+              <li><span>浙江</span><b>95.8</b></li>
+              <li><span>广东</span><b>95.3</b></li>
+              <li><span>山东</span><b>94.9</b></li>
+              <li><span>四川</span><b>94.2</b></li>
+            </ol>
+          </article>
+          <article class="panel reveal delay-1">
+            <h3>风险类型分布</h3>
+            <div class="bars">
+              <p><span>质量风险</span><i style="--w: 72%"></i></p>
+              <p><span>安全风险</span><i style="--w: 61%"></i></p>
+              <p><span>履约风险</span><i style="--w: 48%"></i></p>
+              <p><span>资金风险</span><i style="--w: 37%"></i></p>
+            </div>
+          </article>
+          <article class="panel full reveal delay-2">
+            <h3>监管通报</h3>
+            <table>
+              <thead>
+                <tr>
+                  <th>通报编号</th>
+                  <th>地区</th>
+                  <th>类型</th>
+                  <th>状态</th>
+                  <th>发布时间</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>JG-2026-0412</td>
+                  <td>华东</td>
+                  <td>履约异常</td>
+                  <td><span class="status warn">待整改</span></td>
+                  <td>2026-04-12</td>
+                </tr>
+                <tr>
+                  <td>JG-2026-0409</td>
+                  <td>华南</td>
+                  <td>资质核验</td>
+                  <td><span class="status ok">已完成</span></td>
+                  <td>2026-04-09</td>
+                </tr>
+                <tr>
+                  <td>JG-2026-0407</td>
+                  <td>西南</td>
+                  <td>招采审计</td>
+                  <td><span class="status info">处理中</span></td>
+                  <td>2026-04-07</td>
+                </tr>
+              </tbody>
+            </table>
+          </article>
+        </div>
+      </section>
+
+      <section id="registry" class="registry container">
+        <div class="section-head reveal">
+          <p class="eyebrow">主体服务中心</p>
+          <h2>企业诚信档案快速检索</h2>
+        </div>
+        <form class="search-box reveal delay-1" id="searchForm">
+          <label for="keyword">企业名称 / 统一社会信用代码</label>
+          <div class="input-row">
+            <input id="keyword" type="text" placeholder="例如：中建某某工程有限公司 / 91310000XXXXXX" autocomplete="off" />
+            <button class="btn btn-primary" type="submit">查询</button>
+          </div>
+          <div class="search-results" id="searchResults"></div>
+          <p class="hint">输入企业名称或统一社会信用代码进行检索，支持模糊匹配。</p>
+        </form>
+      </section>
+
+      <section id="liveData" class="live-data container">
+        <div class="section-head reveal">
+          <p class="eyebrow">实时业务数据</p>
+          <h2>企业 / 人员 / 项目最新采集</h2>
+          <p class="hint" id="liveMeta">正在加载最新采集数据...</p>
+        </div>
+        <div class="live-grid">
+          <article class="panel reveal">
+            <h3>企业（最新20）</h3>
+            <div id="enterpriseList" class="live-list"></div>
+          </article>
+          <article class="panel reveal delay-1">
+            <h3>人员（最新20）</h3>
+            <div id="staffList" class="live-list"></div>
+          </article>
+          <article class="panel reveal delay-2">
+            <h3>项目（最新20）</h3>
+            <div id="tenderList" class="live-list"></div>
+          </article>
+        </div>
+      </section>
+
+      <section id="policies" class="policies container">
+        <div class="section-head reveal">
+          <p class="eyebrow">政策法规</p>
+          <h2>最新制度与标准发布</h2>
+        </div>
+        <div class="policy-list">
+          <article class="policy-item reveal">
+            <span>2026-04-10</span>
+            <h3>《建筑市场主体信用评价管理细则（试行）》</h3>
+            <p>明确信用分级、动态修复、异议复核流程和跨地区互认机制。</p>
+          </article>
+          <article class="policy-item reveal delay-1">
+            <span>2026-03-28</span>
+            <h3>《工程项目履约信息归集规范》</h3>
+            <p>统一项目履约指标口径，推动项目级信用记录全量接入。</p>
+          </article>
+          <article class="policy-item reveal delay-2">
+            <span>2026-03-11</span>
+            <h3>《建筑市场失信联合惩戒清单（2026版）》</h3>
+            <p>细化重点失信行为清单，支持动态预警和联合执法协同。</p>
+          </article>
+        </div>
+      </section>
+    </main>
+
+    <footer id="contact" class="site-footer">
+      <div class="container footer-wrap">
+        <div>
+          <h2>全国诚信市场建筑管理平台主管中心</h2>
+          <p>服务电话：400-010-8899</p>
+          <p>邮箱：service@cmbp.gov.cn</p>
+        </div>
+        <div>
+          <p>工作日 09:00 - 18:00</p>
+          <p>技术支持与接口对接请联系平台运维组。</p>
+          <p class="copy">© <span id="year"></span> 全国诚信市场建筑管理平台</p>
+        </div>
+      </div>
+    </footer>
+
+    <script src="./scripts/main.js"></script>
+  </body>
+</html>

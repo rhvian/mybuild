@@ -1,0 +1,197 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>数据看板 - 全国诚信市场建筑管理平台</title>
+    <link rel="stylesheet" href="../styles/main.css" />
+    <link rel="stylesheet" href="../styles/pages.css" />
+  </head>
+  <body class="dashboard-page">
+    <div class="bg-orb orb-a"></div>
+    <div class="bg-orb orb-b"></div>
+    <div class="grid-overlay"></div>
+
+    <header class="site-header">
+      <div class="container nav-wrap">
+        <a class="brand" href="../index.html">
+          <span class="brand-mark">CM</span>
+          <span class="brand-text">
+            <strong>全国诚信市场</strong>
+            <small>建筑管理平台</small>
+          </span>
+        </a>
+        <nav class="nav">
+          <a href="../index.html#overview">平台概览</a>
+          <a href="../index.html#modules">核心能力</a>
+          <a href="../index.html#dashboard">数据看板</a>
+          <a href="../index.html#registry">主体库</a>
+          <a href="../index.html#policies">政策法规</a>
+        </nav>
+      </div>
+    </header>
+
+    <main class="dash-page">
+      <div class="container">
+        <nav class="breadcrumb">
+          <a href="../index.html">首页</a>
+          <span>/</span>
+          <strong>数据看板</strong>
+        </nav>
+
+        <div class="dash-header">
+          <h1>全国诚信指数与风险态势</h1>
+          <p class="dash-update">数据更新时间：<span id="today"></span></p>
+        </div>
+
+        <section class="dash-stats">
+          <article class="dash-stat-card">
+            <p>备案企业总量</p>
+            <h3 data-counter="2487302">0</h3>
+            <span>较上月 +12,847</span>
+          </article>
+          <article class="dash-stat-card">
+            <p>AAA级企业</p>
+            <h3 data-counter="186540">0</h3>
+            <span>占比 7.5%</span>
+          </article>
+          <article class="dash-stat-card">
+            <p>本月预警事件</p>
+            <h3 data-counter="9842">0</h3>
+            <span>较上月 -3.2%</span>
+          </article>
+          <article class="dash-stat-card">
+            <p>失信惩戒在执</p>
+            <h3 data-counter="4216">0</h3>
+            <span>涉及 3,102 家企业</span>
+          </article>
+        </section>
+
+        <section class="dash-charts">
+          <article class="panel dash-chart">
+            <h3>省域诚信指数排行</h3>
+            <div class="chart-bars" id="provinceChart">
+              <div class="chart-bar-row"><span class="chart-label">江苏</span><div class="chart-bar" style="--w:96.4%"><em>96.4</em></div></div>
+              <div class="chart-bar-row"><span class="chart-label">浙江</span><div class="chart-bar" style="--w:95.8%"><em>95.8</em></div></div>
+              <div class="chart-bar-row"><span class="chart-label">广东</span><div class="chart-bar" style="--w:95.3%"><em>95.3</em></div></div>
+              <div class="chart-bar-row"><span class="chart-label">山东</span><div class="chart-bar" style="--w:94.9%"><em>94.9</em></div></div>
+              <div class="chart-bar-row"><span class="chart-label">四川</span><div class="chart-bar" style="--w:94.2%"><em>94.2</em></div></div>
+              <div class="chart-bar-row"><span class="chart-label">湖北</span><div class="chart-bar" style="--w:93.8%"><em>93.8</em></div></div>
+              <div class="chart-bar-row"><span class="chart-label">北京</span><div class="chart-bar" style="--w:93.5%"><em>93.5</em></div></div>
+              <div class="chart-bar-row"><span class="chart-label">上海</span><div class="chart-bar" style="--w:93.1%"><em>93.1</em></div></div>
+              <div class="chart-bar-row"><span class="chart-label">福建</span><div class="chart-bar" style="--w:92.7%"><em>92.7</em></div></div>
+              <div class="chart-bar-row"><span class="chart-label">河南</span><div class="chart-bar" style="--w:92.3%"><em>92.3</em></div></div>
+            </div>
+          </article>
+
+          <article class="panel dash-chart">
+            <h3>风险类型分布</h3>
+            <div class="chart-bars">
+              <div class="chart-bar-row"><span class="chart-label">质量风险</span><div class="chart-bar bar-danger" style="--w:72%"><em>72%</em></div></div>
+              <div class="chart-bar-row"><span class="chart-label">安全风险</span><div class="chart-bar bar-warn" style="--w:61%"><em>61%</em></div></div>
+              <div class="chart-bar-row"><span class="chart-label">履约风险</span><div class="chart-bar bar-accent" style="--w:48%"><em>48%</em></div></div>
+              <div class="chart-bar-row"><span class="chart-label">资金风险</span><div class="chart-bar bar-info" style="--w:37%"><em>37%</em></div></div>
+              <div class="chart-bar-row"><span class="chart-label">资质风险</span><div class="chart-bar bar-info" style="--w:24%"><em>24%</em></div></div>
+              <div class="chart-bar-row"><span class="chart-label">招采异常</span><div class="chart-bar bar-info" style="--w:18%"><em>18%</em></div></div>
+            </div>
+          </article>
+        </section>
+
+        <section class="dash-charts">
+          <article class="panel dash-chart">
+            <h3>信用等级分布</h3>
+            <div class="grade-grid">
+              <div class="grade-item"><b>AAA</b><span>186,540</span><div class="grade-bar" style="--w:7.5%"></div></div>
+              <div class="grade-item"><b>AA</b><span>412,830</span><div class="grade-bar" style="--w:16.6%"></div></div>
+              <div class="grade-item"><b>A</b><span>623,450</span><div class="grade-bar" style="--w:25.1%"></div></div>
+              <div class="grade-item"><b>BBB</b><span>824,160</span><div class="grade-bar" style="--w:33.1%"></div></div>
+              <div class="grade-item"><b>BB及以下</b><span>440,322</span><div class="grade-bar bar-low" style="--w:17.7%"></div></div>
+            </div>
+          </article>
+
+          <article class="panel dash-chart">
+            <h3>月度预警趋势</h3>
+            <div class="trend-chart" id="trendChart">
+              <canvas id="trendCanvas" width="500" height="200"></canvas>
+            </div>
+          </article>
+        </section>
+
+        <section class="dash-table-section">
+          <article class="panel">
+            <h3>最新监管通报</h3>
+            <table class="detail-table">
+              <thead>
+                <tr>
+                  <th>通报编号</th>
+                  <th>地区</th>
+                  <th>类型</th>
+                  <th>涉及企业</th>
+                  <th>状态</th>
+                  <th>发布时间</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>JG-2026-0412</td>
+                  <td>华东</td>
+                  <td>履约异常</td>
+                  <td>某某建设集团</td>
+                  <td><span class="status warn">待整改</span></td>
+                  <td>2026-04-12</td>
+                </tr>
+                <tr>
+                  <td>JG-2026-0409</td>
+                  <td>华南</td>
+                  <td>资质核验</td>
+                  <td>某某工程公司</td>
+                  <td><span class="status ok">已完成</span></td>
+                  <td>2026-04-09</td>
+                </tr>
+                <tr>
+                  <td>JG-2026-0407</td>
+                  <td>西南</td>
+                  <td>招采审计</td>
+                  <td>某某监理公司</td>
+                  <td><span class="status info">处理中</span></td>
+                  <td>2026-04-07</td>
+                </tr>
+                <tr>
+                  <td>JG-2026-0403</td>
+                  <td>华北</td>
+                  <td>安全违规</td>
+                  <td>某某施工队</td>
+                  <td><span class="status warn">待整改</span></td>
+                  <td>2026-04-03</td>
+                </tr>
+                <tr>
+                  <td>JG-2026-0328</td>
+                  <td>华中</td>
+                  <td>资金异常</td>
+                  <td>某某地产公司</td>
+                  <td><span class="status ok">已处置</span></td>
+                  <td>2026-03-28</td>
+                </tr>
+              </tbody>
+            </table>
+          </article>
+        </section>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div class="container footer-wrap">
+        <div>
+          <h2>全国诚信市场建筑管理平台主管中心</h2>
+          <p>服务电话：400-010-8899</p>
+        </div>
+        <div>
+          <p class="copy">&copy; <span id="year"></span> 全国诚信市场建筑管理平台</p>
+        </div>
+      </div>
+    </footer>
+
+    <script src="../scripts/main.js"></script>
+    <script src="../scripts/dashboard.js"></script>
+  </body>
+</html>

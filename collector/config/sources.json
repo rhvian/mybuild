@@ -1,0 +1,32 @@
+[
+  {
+    "source_id": "jzsc_company_live",
+    "name": "四库一平台-建筑企业真实数据",
+    "source_type": "jzsc_company_live",
+    "source_level": "A",
+    "base_url": "https://jzsc.mohurd.gov.cn",
+    "province_code": "000000",
+    "city_code": "110000",
+    "enabled": true
+  },
+  {
+    "source_id": "jzsc_staff_live",
+    "name": "四库一平台-从业人员真实数据",
+    "source_type": "jzsc_staff_live",
+    "source_level": "B",
+    "base_url": "https://jzsc.mohurd.gov.cn",
+    "province_code": "000000",
+    "city_code": "110000",
+    "enabled": true
+  },
+  {
+    "source_id": "jzsc_project_live",
+    "name": "四库一平台-项目/招采真实数据",
+    "source_type": "jzsc_project_live",
+    "source_level": "B",
+    "base_url": "https://jzsc.mohurd.gov.cn",
+    "province_code": "000000",
+    "city_code": "110000",
+    "enabled": true
+  }
+]
