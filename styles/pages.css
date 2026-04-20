@@ -1667,3 +1667,129 @@
     overflow-x: auto;
   }
 }
+
+/* ===== v0.4 移动端细化（768px 以下）===== */
+@media (max-width: 768px) {
+  /* admin banner 横条 */
+  .admin-banner {
+    flex-wrap: wrap;
+    padding: 8px 14px;
+    font-size: 12px;
+  }
+  .admin-banner-text {
+    order: 2;
+    width: 100%;
+    margin-top: 4px;
+  }
+
+  /* 采集控制台 grid 改单列 */
+  .collect-grid {
+    grid-template-columns: 1fr !important;
+    gap: 14px;
+  }
+  .collect-stats {
+    grid-template-columns: 1fr;
+  }
+  .collect-actions {
+    flex-direction: column;
+  }
+  .collect-actions .btn {
+    width: 100%;
+  }
+  .collect-log {
+    max-height: 220px;
+    font-size: 11px;
+  }
+
+  /* 预警 / 用户表单：两列 grid 展平 */
+  #al-new-form > div[style*="grid-template-columns"],
+  #us-form > div[style*="grid-template-columns"] {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* 详情页降级横幅 */
+  .detail-banner {
+    flex-direction: column;
+    padding: 12px 14px;
+  }
+  .detail-banner .banner-icon {
+    width: 24px;
+    height: 24px;
+    font-size: 14px;
+  }
+
+  /* 占位面板更紧凑 */
+  .placeholder-panel {
+    padding: 16px;
+  }
+  .placeholder-head {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 6px;
+  }
+  .feature-list {
+    padding-left: 18px;
+  }
+
+  /* gov-subnote（enterprise 资质占位）*/
+  .gov-subnote {
+    padding: 12px;
+  }
+
+  /* 详情 tab 小屏紧贴 */
+  .gov-tabs {
+    overflow-x: auto;
+    white-space: nowrap;
+    -webkit-overflow-scrolling: touch;
+  }
+  .gov-tabs .dtab {
+    display: inline-block;
+  }
+
+  /* detail-table 容错：允许横向滚动，防止列挤压 */
+  .admin-section .detail-table,
+  .panel .detail-table {
+    display: block;
+    overflow-x: auto;
+    white-space: nowrap;
+  }
+
+  /* 预警 / 用户 筛选栏（.admin-toolbar 已有 column，这里补 select 宽度）*/
+  .admin-toolbar .admin-select,
+  .admin-toolbar .admin-search {
+    width: 100%;
+  }
+
+  /* 登录页 social-login 按钮 stack */
+  .social-login {
+    flex-direction: column;
+  }
+  .btn-social {
+    width: 100%;
+  }
+}
+
+/* 超小屏（480px 以下）再紧一档 */
+@media (max-width: 480px) {
+  .container {
+    padding-left: 12px;
+    padding-right: 12px;
+  }
+  .admin-content {
+    padding: 14px;
+  }
+  .site-header {
+    padding: 10px 0;
+  }
+  .dashboard .panel,
+  .admin-content .panel {
+    padding: 14px !important;
+  }
+  .placeholder-head h3,
+  .collect-status-head h3 {
+    font-size: 15px;
+  }
+  .detail-banner .banner-body h3 {
+    font-size: 14px;
+  }
+}
