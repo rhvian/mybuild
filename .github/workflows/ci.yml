@@ -1,0 +1,53 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  backend:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python: ["3.11", "3.12"]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python ${{ matrix.python }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+          cache: pip
+
+      - name: Install deps
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install ruff
+
+      - name: Ruff lint (backend + collector)
+        run: ruff check backend/ collector/ || true   # 暂不阻断，L2 完成后再收紧
+
+      - name: Pytest
+        run: |
+          mkdir -p backend/data
+          pytest -q
+
+      - name: Compile-check static scripts
+        run: |
+          # 所有 Python 模块可 import
+          python -c "import collector.cli, collector.pipeline, collector.control_server; print('collector OK')"
+          python -c "import backend.main; print('backend OK')"
+
+  scripts:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: ShellCheck
+        uses: ludeeus/action-shellcheck@master
+        with:
+          severity: warning
+          ignore_paths: collector/scripts   # probe_*.py 是 python；这里略过 collector 下的 .sh

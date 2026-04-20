@@ -1,0 +1,26 @@
+[Unit]
+Description=mybuild — L2 FastAPI backend（用户 / 角色 / JWT）
+Documentation=file:/opt/mybuild/DEPLOYMENT.md
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=mybuild
+Group=mybuild
+WorkingDirectory=/opt/mybuild
+Environment=MYBUILD_DATABASE_URL=sqlite:////opt/mybuild/backend/data/operation.db
+# 生产环境务必覆盖：sudo systemctl edit mybuild-backend.service 注入 MYBUILD_JWT_SECRET / MYBUILD_BOOTSTRAP_ADMIN_PASSWORD
+EnvironmentFile=-/etc/mybuild/backend.env
+ExecStart=/usr/bin/python3 -m uvicorn backend.main:app --host 127.0.0.1 --port 8000 --workers 2
+KillSignal=SIGTERM
+TimeoutStopSec=15
+Restart=on-failure
+RestartSec=5
+StandardOutput=journal
+StandardError=journal
+LimitNOFILE=8192
+MemoryMax=1G
+
+[Install]
+WantedBy=multi-user.target
