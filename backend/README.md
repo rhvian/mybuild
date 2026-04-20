@@ -70,7 +70,25 @@ location /system/ { proxy_pass http://127.0.0.1:8000; proxy_set_header Host $hos
 
 - 默认：`backend/data/operation.db`（SQLite）
 - 阶段 4：迁 PostgreSQL，用 alembic 做 DDL 管理
-- `Base.metadata.create_all` 在启动时自动建表 + bootstrap 默认数据
+- `Base.metadata.create_all` 在启动时自动建表 + bootstrap 默认数据（仅 dev / SQLite 用，生产 PG 请改用 alembic）
+
+### Alembic 迁移（为 PG 准备）
+
+Scaffold 已就位：`alembic.ini` + `backend/migrations/env.py` + `backend/migrations/versions/0001_initial.py`。
+
+```bash
+# 本机 SQLite 测试 upgrade 能否重建
+rm -f backend/data/operation.db
+alembic -c alembic.ini upgrade head
+# 生成新 migration（改完 model 后）
+alembic -c alembic.ini revision --autogenerate -m "add X"
+
+# 生产 PostgreSQL
+export MYBUILD_DATABASE_URL="postgresql+psycopg2://user:pass@host:5432/mybuild"
+alembic -c alembic.ini upgrade head
+# FastAPI 启动时仍会调 Base.metadata.create_all，理论上 no-op（表已存在）；
+# 上线前可加 MYBUILD_SKIP_CREATE_ALL=1 环境变量（待实现）确保只走 alembic
+```
 
 ## 测试
 
