@@ -46,7 +46,7 @@
       <div class="admin-banner" id="adminBanner">
         <span class="admin-banner-icon">&#9432;</span>
         <span class="admin-banner-text">
-          <strong>v0.4 · L2</strong> · 预警处置已对接 FastAPI 真实业务流；惩戒 / 项目监管 / 用户管理 3 项仍为占位。
+          <strong>v0.4 · L2</strong> · 预警处置 + 用户权限已对接 FastAPI 真实业务流；惩戒 / 项目监管 2 项待数据源。
         </span>
         <button class="admin-banner-close" aria-label="关闭" onclick="document.getElementById('adminBanner').style.display='none';">&times;</button>
       </div>
@@ -380,23 +380,80 @@
           </article>
         </section>
 
-        <!-- 用户管理（建设中） -->
+        <!-- 用户与权限（v0.4 真实业务）-->
         <section class="admin-section hidden" id="secUsers">
-          <article class="panel placeholder-panel">
-            <div class="placeholder-head">
-              <h3>用户与权限 · 建设中</h3>
-              <span class="badge-wip">v1.0 规划</span>
+          <article class="panel">
+            <div class="collect-status-head">
+              <h3>用户与权限</h3>
+              <span id="us-count" class="muted-inline"></span>
+              <button class="btn btn-ghost btn-sm" id="us-refresh">刷新</button>
+              <button class="btn btn-primary btn-sm" id="us-new">添加用户</button>
             </div>
-            <p class="hint">
-              真实用户体系在 L2 阶段随 FastAPI + JWT 后端同步上线，5 级角色：游客 / 招商 / 政务 / 审核员 / 管理员。
-            </p>
-            <ul class="feature-list">
-              <li>表结构：<code>users</code> / <code>roles</code> / <code>permissions</code> / <code>role_permissions</code></li>
-              <li>认证：bcrypt + JWT（15min access + 7d refresh），登录失败限流</li>
-              <li>RBAC 中间件：<code>require_role</code> / <code>require_permission</code></li>
-              <li>审计：所有写操作落 <code>audit_log</code> 表</li>
-            </ul>
-            <p class="hint muted">当前登录仅为前端口令校验，无后端 session。</p>
+            <div class="admin-toolbar" style="padding:8px 0 12px">
+              <input id="us-q" type="text" class="admin-search" placeholder="按邮箱 / 姓名搜索..." />
+              <select id="us-f-role" class="admin-select">
+                <option value="">全部角色</option>
+              </select>
+            </div>
+            <table class="detail-table">
+              <thead>
+                <tr>
+                  <th>ID</th><th>邮箱</th><th>姓名</th><th>角色</th><th>状态</th><th>最近登录</th><th>创建时间</th><th>操作</th>
+                </tr>
+              </thead>
+              <tbody id="us-body"><tr><td colspan="8" class="muted">加载中…</td></tr></tbody>
+            </table>
+            <div style="margin-top:12px;text-align:center">
+              <button class="btn btn-ghost" id="us-prev">上一页</button>
+              <span id="us-page" style="margin:0 14px">第 1 页</span>
+              <button class="btn btn-ghost" id="us-next">下一页</button>
+            </div>
+            <p class="hint muted" id="us-feedback"></p>
+          </article>
+
+          <!-- 编辑 / 新建 面板 -->
+          <article class="panel hidden" id="us-form-panel" style="margin-top:18px">
+            <div class="collect-status-head">
+              <h3 id="us-form-title">添加用户</h3>
+              <button class="btn btn-ghost btn-sm" id="us-form-close">关闭</button>
+            </div>
+            <form id="us-form">
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+                <div class="form-group">
+                  <label>邮箱 *</label>
+                  <input id="us-f-email" type="email" required maxlength="128" class="admin-search" style="width:100%">
+                </div>
+                <div class="form-group">
+                  <label>姓名</label>
+                  <input id="us-f-name" type="text" maxlength="64" class="admin-search" style="width:100%">
+                </div>
+              </div>
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+                <div class="form-group">
+                  <label>角色</label>
+                  <select id="us-f-role-sel" class="admin-select" style="width:100%">
+                    <option value="">（无角色）</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label>状态</label>
+                  <select id="us-f-active" class="admin-select" style="width:100%">
+                    <option value="true">启用</option>
+                    <option value="false">禁用</option>
+                  </select>
+                </div>
+              </div>
+              <div class="form-group">
+                <label id="us-f-pw-label">密码 *（至少 8 位）</label>
+                <input id="us-f-pw" type="password" maxlength="128" class="admin-search" style="width:100%" autocomplete="new-password">
+                <p class="hint muted" id="us-f-pw-hint" style="margin-top:4px"></p>
+              </div>
+              <div class="collect-actions">
+                <button class="btn btn-primary" type="submit" id="us-f-submit">保存</button>
+                <button class="btn btn-danger" type="button" id="us-f-delete" style="display:none">删除该用户</button>
+                <button class="btn btn-ghost" type="button" id="us-f-cancel">取消</button>
+              </div>
+            </form>
           </article>
         </section>
       </main>
@@ -406,5 +463,6 @@
     <script src="../scripts/admin.js"></script>
     <script src="../scripts/admin-control.js"></script>
     <script src="../scripts/admin-alerts.js"></script>
+    <script src="../scripts/admin-users.js"></script>
   </body>
 </html>
