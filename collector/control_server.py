@@ -76,7 +76,37 @@ def load_allowed_hashes() -> set[str]:
 ALLOWED_HASHES = load_allowed_hashes()
 
 
+# ===== 认证失败限流（内存；进程重启清零）=====
+# key: client IP；value: (locked_until_epoch_or_0, fail_count, window_start_epoch)
+_AUTH_FAIL_STATE: Dict[str, Tuple[float, int, float]] = {}
+
+
+# ===== 省份代码 → 中文名（与 export_live_data 保持一致） =====
+_PROVINCE_NAMES: Dict[str, str] = {
+    "110000": "北京", "120000": "天津", "130000": "河北", "140000": "山西",
+    "150000": "内蒙古", "210000": "辽宁", "220000": "吉林", "230000": "黑龙江",
+    "310000": "上海", "320000": "江苏", "330000": "浙江", "340000": "安徽",
+    "350000": "福建", "360000": "江西", "370000": "山东", "410000": "河南",
+    "420000": "湖北", "430000": "湖南", "440000": "广东", "450000": "广西",
+    "460000": "海南", "500000": "重庆", "510000": "四川", "520000": "贵州",
+    "530000": "云南", "540000": "西藏", "610000": "陕西", "620000": "甘肃",
+    "630000": "青海", "640000": "宁夏", "650000": "新疆",
+    "000000": "全国",
+}
+
+
+def _province_name(code: Optional[str]) -> str:
+    if not code:
+        return "未知"
+    return _PROVINCE_NAMES.get(str(code), str(code))
+
+
 # ===== 工具函数 =====
+
+def _epoch_now() -> float:
+    import time
+    return time.time()
+
 
 def _utc_now_iso() -> str:
     return datetime.now(timezone.utc).isoformat()
@@ -367,13 +397,26 @@ class ControlHandler(BaseHTTPRequestHandler):
         # 先 CORS 头（send_response 之后无法再 send_header，在各 _send_* 之前先写好）
         # _send_json 里没有 CORS 头，这里不再重复；控制台与 API 同源时不需要
 
-        # 无需鉴权的路径
+        # 无需鉴权的路径（公共查询 + 登录登出 + ping）
         if path == "/api/auth/verify" and method == "POST":
             return self._api_auth_verify(body or {})
         if path == "/api/ping" and method == "GET":
             return self._send_json(200, {"ok": True, "ts": _utc_now_iso()})
+        if path == "/api/auth/logout" and method == "POST":
+            return self._send_json(200, {"ok": True, "note": "client should discard token"})
 
-        # 之后全部要鉴权
+        # 业务查询（只读 SQL）公开，便于公众搜索 / 详情页无需登录
+        if path == "/api/stats" and method == "GET":
+            return self._api_stats()
+        for etype in ("enterprise", "staff", "tender"):
+            base = f"/api/{etype}"
+            if method == "GET":
+                if path == base:
+                    return self._api_list_entities(etype, qs)
+                if path.startswith(base + "/") and "/" not in path[len(base) + 1:]:
+                    return self._api_get_entity(etype, path[len(base) + 1:])
+
+        # 之后的端点全部要鉴权（采集控制 / 运行历史 / 健康）
         if not self._check_auth():
             return self._send_json(401, {"ok": False, "error": "unauthorized"})
 
@@ -387,19 +430,47 @@ class ControlHandler(BaseHTTPRequestHandler):
             return self._api_collect_logs(qs)
         if path == "/api/health" and method == "GET":
             return self._api_health()
+        if path == "/api/runs" and method == "GET":
+            return self._api_runs(qs)
 
         self._send_json(404, {"ok": False, "error": "not_found", "path": path})
 
     # ===== API 实现 =====
 
     def _api_auth_verify(self, body: Dict[str, Any]) -> None:
+        ip = self.client_address[0]
+        now = _epoch_now()
+        # 失败限流：同 IP 10 分钟窗口 5 次失败则锁 15 分钟
+        state = _AUTH_FAIL_STATE.get(ip)
+        if state:
+            locked_until, count, window_start = state
+            if locked_until and locked_until > now:
+                wait = int(locked_until - now)
+                return self._send_json(
+                    429,
+                    {"ok": False, "error": "rate_limited", "retry_after_sec": wait},
+                )
         user = str(body.get("user", "")).strip()
         pwd = str(body.get("password", ""))
         if not user or not pwd:
             return self._send_json(400, {"ok": False, "error": "missing_user_or_password"})
         token = _sha256(f"{user}:{pwd}")
         if token in ALLOWED_HASHES:
+            _AUTH_FAIL_STATE.pop(ip, None)  # 成功即清零
             return self._send_json(200, {"ok": True, "token": token, "user": user})
+
+        # 登录失败：计数
+        prev = _AUTH_FAIL_STATE.get(ip)
+        if not prev or now - prev[2] > 600:
+            _AUTH_FAIL_STATE[ip] = (0.0, 1, now)
+        else:
+            new_count = prev[1] + 1
+            locked_until = 0.0
+            if new_count >= 5:
+                locked_until = now + 900
+                _AUTH_FAIL_STATE[ip] = (locked_until, new_count, prev[2])
+            else:
+                _AUTH_FAIL_STATE[ip] = (0.0, new_count, prev[2])
         return self._send_json(401, {"ok": False, "error": "invalid_credentials"})
 
     def _api_collect_status(self) -> None:
@@ -485,6 +556,204 @@ class ControlHandler(BaseHTTPRequestHandler):
                 "stderr": err.splitlines()[-10:],
             },
         )
+
+    # ===== 业务查询（只读 SQL） =====
+
+    def _open_db(self) -> Optional[sqlite3.Connection]:
+        if not DB_PATH.exists():
+            return None
+        try:
+            c = sqlite3.connect(str(DB_PATH))
+            c.row_factory = sqlite3.Row
+            return c
+        except Exception as e:
+            self._send_json(500, {"ok": False, "error": f"db_open_failed: {e}"})
+            return None
+
+    @staticmethod
+    def _row_to_entity(row: sqlite3.Row) -> Dict[str, Any]:
+        d = dict(row)
+        raw = d.pop("raw_payload_json", None)
+        payload: Any = None
+        if raw:
+            try:
+                payload = json.loads(raw)
+            except Exception:
+                payload = None
+        d["payload"] = payload
+        return d
+
+    @staticmethod
+    def _parse_paging(qs: Dict[str, list[str]]) -> Tuple[int, int]:
+        try:
+            page = max(1, int((qs.get("page") or ["1"])[0]))
+        except Exception:
+            page = 1
+        try:
+            size = int((qs.get("size") or ["20"])[0])
+        except Exception:
+            size = 20
+        size = max(1, min(200, size))
+        return page, size
+
+    def _api_list_entities(self, entity_type: str, qs: Dict[str, list[str]]) -> None:
+        page, size = self._parse_paging(qs)
+        q = (qs.get("q") or [""])[0].strip()
+        province = (qs.get("province") or [""])[0].strip()
+
+        where = ["entity_type = ?"]
+        args: list[Any] = [entity_type]
+        if q:
+            where.append("(name LIKE ? OR uscc LIKE ? OR project_code LIKE ?)")
+            kw = f"%{q}%"
+            args.extend([kw, kw, kw])
+        if province:
+            # 支持 6 位代码或中文名（city_name 含"市"字符，province_code 6 位）
+            where.append("(province_code = ? OR city_name LIKE ?)")
+            args.extend([province, f"%{province}%"])
+        where_clause = " AND ".join(where)
+
+        c = self._open_db()
+        if not c:
+            return
+        try:
+            total_row = c.execute(
+                f"SELECT COUNT(*) FROM normalized_entity WHERE {where_clause}", args
+            ).fetchone()
+            total = int(total_row[0]) if total_row else 0
+            offset = (page - 1) * size
+            rows = c.execute(
+                f"SELECT * FROM normalized_entity WHERE {where_clause} "
+                f"ORDER BY id DESC LIMIT ? OFFSET ?",
+                args + [size, offset],
+            ).fetchall()
+            items = [self._row_to_entity(r) for r in rows]
+            return self._send_json(
+                200,
+                {
+                    "ok": True,
+                    "entity_type": entity_type,
+                    "total": total,
+                    "page": page,
+                    "size": size,
+                    "pages": (total + size - 1) // size if size else 1,
+                    "items": items,
+                },
+            )
+        finally:
+            c.close()
+
+    def _api_get_entity(self, entity_type: str, raw_id: str) -> None:
+        try:
+            eid = int(raw_id)
+        except Exception:
+            return self._send_json(400, {"ok": False, "error": "invalid_id"})
+        c = self._open_db()
+        if not c:
+            return
+        try:
+            r = c.execute(
+                "SELECT * FROM normalized_entity WHERE id = ? AND entity_type = ?",
+                (eid, entity_type),
+            ).fetchone()
+            if not r:
+                return self._send_json(404, {"ok": False, "error": "not_found", "id": eid})
+            return self._send_json(200, {"ok": True, "item": self._row_to_entity(r)})
+        finally:
+            c.close()
+
+    def _api_runs(self, qs: Dict[str, list[str]]) -> None:
+        page, size = self._parse_paging(qs)
+        c = self._open_db()
+        if not c:
+            return
+        try:
+            total_row = c.execute("SELECT COUNT(*) FROM ingestion_run").fetchone()
+            total = int(total_row[0]) if total_row else 0
+            rows = c.execute(
+                "SELECT run_id, started_at, ended_at, raw_count, normalized_count, "
+                "issue_count, failed_source_count "
+                "FROM ingestion_run ORDER BY rowid DESC LIMIT ? OFFSET ?",
+                (size, (page - 1) * size),
+            ).fetchall()
+            items = [dict(r) for r in rows]
+            return self._send_json(
+                200,
+                {
+                    "ok": True,
+                    "total": total,
+                    "page": page,
+                    "size": size,
+                    "pages": (total + size - 1) // size if size else 1,
+                    "items": items,
+                },
+            )
+        finally:
+            c.close()
+
+    def _api_stats(self) -> None:
+        c = self._open_db()
+        if not c:
+            return
+        try:
+            # 分类总数
+            total_by_type = {
+                row["entity_type"]: int(row["n"])
+                for row in c.execute(
+                    "SELECT entity_type, COUNT(*) AS n FROM normalized_entity GROUP BY entity_type"
+                ).fetchall()
+            }
+            # 省份 × 企业
+            province_enterprise = [
+                {
+                    "province_code": r["province_code"],
+                    "province_name": _province_name(r["province_code"]),
+                    "count": int(r["n"]),
+                }
+                for r in c.execute(
+                    "SELECT province_code, COUNT(*) AS n FROM normalized_entity "
+                    "WHERE entity_type = 'enterprise' "
+                    "GROUP BY province_code ORDER BY n DESC LIMIT 40"
+                ).fetchall()
+            ]
+            # 人员注册类别
+            staff_rows = c.execute(
+                "SELECT raw_payload_json FROM normalized_entity WHERE entity_type = 'staff'"
+            ).fetchall()
+            reg_counter: Dict[str, int] = {}
+            for r in staff_rows:
+                try:
+                    p = json.loads(r["raw_payload_json"] or "{}")
+                    t = p.get("register_type", "").strip()
+                    if t:
+                        reg_counter[t] = reg_counter.get(t, 0) + 1
+                except Exception:
+                    pass
+            staff_register_type = sorted(
+                [{"register_type": k, "count": v} for k, v in reg_counter.items()],
+                key=lambda x: x["count"],
+                reverse=True,
+            )[:20]
+            # 最近 runs
+            recent_runs = [
+                dict(r) for r in c.execute(
+                    "SELECT run_id, started_at, ended_at, raw_count, normalized_count, "
+                    "issue_count, failed_source_count "
+                    "FROM ingestion_run ORDER BY rowid DESC LIMIT 10"
+                ).fetchall()
+            ]
+            stats = {
+                "total_by_type": total_by_type,
+                "total_enterprise": total_by_type.get("enterprise", 0),
+                "total_staff": total_by_type.get("staff", 0),
+                "total_tender": total_by_type.get("tender", 0),
+                "province_enterprise": province_enterprise,
+                "staff_register_type": staff_register_type,
+                "recent_runs": recent_runs,
+            }
+            return self._send_json(200, {"ok": True, "stats": stats, "ts": _utc_now_iso()})
+        finally:
+            c.close()
 
 
 # ===== 服务启动 =====

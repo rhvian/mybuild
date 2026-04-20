@@ -28,41 +28,68 @@ async function loadDetailData() {
     return;
   }
 
+  // 优先走 /api/{entityType}/:id；API 不可用时 fallback 到 live-data.json
+  let item = null;
+  let data = null;
   try {
+    const apiResp = await fetch(`/api/${entityType}/${encodeURIComponent(id)}`, { cache: "no-store" });
+    if (apiResp.ok) {
+      const payload = await apiResp.json();
+      if (payload && payload.ok && payload.item) {
+        item = payload.item;
+      }
+    }
+  } catch (_e) {
+    // 控制服务不可达；静默回退
+  }
+
+  try {
+    // enterprise 详情需要关联的 staff/tender 列表 —— 仍读 live-data.json 拿上下文
+    // （阶段 3 再改成 /api/enterprise/:id/staff、/api/enterprise/:id/project）
     const resp = await fetch("../scripts/live-data.json", { cache: "no-store" });
-    if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
-    const data = await resp.json();
-    detailDataCache = data;
-    const list = data[entityType] || [];
-    const item = list.find((x) => String(x.id) === String(id));
+    if (resp.ok) {
+      data = await resp.json();
+      detailDataCache = data;
+      if (!item) {
+        const list = data[entityType] || [];
+        item = list.find((x) => String(x.id) === String(id));
+      }
+    } else if (!item) {
+      throw new Error(`live-data.json HTTP ${resp.status}`);
+    }
+  } catch (err) {
     if (!item) {
-      const typeLabel = ({ enterprise: "企业", staff: "人员", tender: "项目" })[entityType] || entityType;
+      console.error(err);
       showDetailBanner(
         root,
-        "warn",
-        `未找到 id=${id} 的${typeLabel}记录`,
-        `可能原因：① 本次导出的 live-data.json 采样截断（当前仅导出 6000 条/实体，更多记录需通过采集控制台重新全量导出）② 该 id 已归档或被删除 ③ URL 从外部复制后 id 值已过期。建议返回 <a href="../index.html#registry" class="link">主体库</a> 重新查询。`
+        "error",
+        "数据加载失败",
+        `读取数据出错：${String(err)}。控制服务或 live-data.json 均不可用。请联系管理员或访问<a href="admin.html" class="link">采集控制台</a>。`
       );
       return;
     }
+    data = data || { enterprise: [], staff: [], tender: [] };
+  }
 
-    if (entityType === "enterprise") {
-      fillEnterprise(item);
-      renderEnterpriseStaff(item, data);
-      renderEnterpriseProjects(item, data);
-    } else if (entityType === "staff") {
-      fillStaff(item);
-    } else if (entityType === "tender") {
-      fillProject(item);
-    }
-  } catch (err) {
-    console.error(err);
+  if (!item) {
+    const typeLabel = ({ enterprise: "企业", staff: "人员", tender: "项目" })[entityType] || entityType;
     showDetailBanner(
       root,
-      "error",
-      "数据加载失败",
-      `读取 live-data.json 出错：${String(err)}。可能是采集服务未启动或数据尚未导出。请联系管理员或访问<a href="admin.html" class="link">采集控制台</a>确认。`
+      "warn",
+      `未找到 id=${id} 的${typeLabel}记录`,
+      `可能原因：① id 已过期或该记录已归档 ② 本次导出的 live-data.json 采样截断（默认仅 6000 条/实体）③ URL 从外部复制后 id 值失效。建议返回 <a href="../index.html#registry" class="link">主体库</a> 重新查询。`
     );
+    return;
+  }
+
+  if (entityType === "enterprise") {
+    fillEnterprise(item);
+    renderEnterpriseStaff(item, data);
+    renderEnterpriseProjects(item, data);
+  } else if (entityType === "staff") {
+    fillStaff(item);
+  } else if (entityType === "tender") {
+    fillProject(item);
   }
 }
 

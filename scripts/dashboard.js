@@ -7,13 +7,24 @@
     if (el) el.textContent = v;
   };
 
-  // Load data
+  // Load data — 优先 /api/stats + /api/runs，退化到 live-data.json
   let data = null;
   try {
-    const resp = await fetch("../scripts/live-data.json", { cache: "no-store" });
-    if (resp.ok) data = await resp.json();
-  } catch (e) {
-    console.warn("live-data.json load failed", e);
+    const statsResp = await fetch("/api/stats", { cache: "no-store" });
+    if (statsResp.ok) {
+      const payload = await statsResp.json();
+      if (payload && payload.ok && payload.stats) {
+        data = { stats: payload.stats, updated_at: payload.ts || new Date().toISOString() };
+      }
+    }
+  } catch (_e) {}
+  if (!data) {
+    try {
+      const resp = await fetch("../scripts/live-data.json", { cache: "no-store" });
+      if (resp.ok) data = await resp.json();
+    } catch (e) {
+      console.warn("live-data.json load failed", e);
+    }
   }
   if (!data) {
     setText("stat-enterprise", "—");

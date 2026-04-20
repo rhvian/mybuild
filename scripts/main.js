@@ -221,32 +221,21 @@ const searchForm = document.getElementById("searchForm");
 const searchResults = document.getElementById("searchResults");
 
 if (searchForm && searchResults) {
-  const doSearch = () => {
-    const keyword = document.getElementById("keyword").value.trim();
-    const provFilter = (document.getElementById("provinceFilter") || {}).value || "";
-
-    const base = liveDataCache.enterprise || [];
-    const filtered = base.filter((ent) => {
-      const provOk = !provFilter || (ent.city_name || "").includes(provFilter);
-      if (!provOk) return false;
-      if (!keyword) return true;
-      const kw = keyword.toUpperCase();
-      return (
-        (ent.name || "").includes(keyword) ||
-        (ent.uscc || "").toUpperCase().includes(kw)
-      );
-    });
-
-    if (filtered.length === 0) {
+  // 异步搜索：先试 /api/enterprise?q=，回退到 liveDataCache 客户端过滤
+  const renderResults = (items, totalCount) => {
+    if (!items || items.length === 0) {
       searchResults.innerHTML =
         '<p style="color:var(--text-soft);padding:8px 0">未找到匹配的企业，请调整搜索关键词或筛选条件</p>';
       return;
     }
-
-    const shown = filtered.slice(0, 50);
-    const more = filtered.length > 50 ? `<p style="color:var(--text-soft);padding:8px 0;text-align:center">… 另外 ${(filtered.length - 50).toLocaleString()} 条未显示，请缩小搜索范围</p>` : "";
+    const shown = items.slice(0, 50);
+    const remaining = (totalCount != null ? totalCount : items.length) - shown.length;
+    const more = remaining > 0
+      ? `<p style="color:var(--text-soft);padding:8px 0;text-align:center">… 另外 ${remaining.toLocaleString()} 条未显示，请缩小搜索范围</p>`
+      : "";
+    const total = totalCount != null ? totalCount : items.length;
     searchResults.innerHTML =
-      `<p style="color:var(--text-soft);padding:8px 0;font-size:0.92em">共 <b>${filtered.length.toLocaleString()}</b> 条匹配</p>` +
+      `<p style="color:var(--text-soft);padding:8px 0;font-size:0.92em">共 <b>${total.toLocaleString()}</b> 条匹配</p>` +
       shown
         .map(
           (ent) => `
@@ -264,6 +253,42 @@ if (searchForm && searchResults) {
         .join("") + more;
   };
 
+  const doSearch = async () => {
+    const keyword = document.getElementById("keyword").value.trim();
+    const provFilter = (document.getElementById("provinceFilter") || {}).value || "";
+
+    // 优先走 /api/enterprise
+    try {
+      const params = new URLSearchParams({ size: "50" });
+      if (keyword) params.set("q", keyword);
+      if (provFilter) params.set("province", provFilter);
+      const resp = await fetch("/api/enterprise?" + params.toString(), { cache: "no-store" });
+      if (resp.ok) {
+        const payload = await resp.json();
+        if (payload && payload.ok) {
+          renderResults(payload.items || [], payload.total);
+          return;
+        }
+      }
+    } catch (_e) {
+      // fallback 到客户端
+    }
+
+    // Fallback: 全量客户端过滤（live-data.json 已在 loadLiveData 缓存）
+    const base = liveDataCache.enterprise || [];
+    const filtered = base.filter((ent) => {
+      const provOk = !provFilter || (ent.city_name || "").includes(provFilter);
+      if (!provOk) return false;
+      if (!keyword) return true;
+      const kw = keyword.toUpperCase();
+      return (
+        (ent.name || "").includes(keyword) ||
+        (ent.uscc || "").toUpperCase().includes(kw)
+      );
+    });
+    renderResults(filtered, filtered.length);
+  };
+
   searchForm.addEventListener("submit", (e) => {
     e.preventDefault();
     doSearch();
@@ -271,12 +296,11 @@ if (searchForm && searchResults) {
   const provSelect = document.getElementById("provinceFilter");
   if (provSelect) provSelect.addEventListener("change", doSearch);
 
-  // Real-time search hint — trigger doSearch with debounce
   const keywordInput = document.getElementById("keyword");
   let searchTimer = null;
   keywordInput.addEventListener("input", () => {
     clearTimeout(searchTimer);
-    searchTimer = setTimeout(doSearch, 200);
+    searchTimer = setTimeout(doSearch, 250);
   });
 }
 
