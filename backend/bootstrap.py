@@ -21,14 +21,20 @@ DEFAULT_PERMISSIONS: list[tuple[str, str]] = [
     ("audit:read", "查看审计日志"),
     ("collect:read", "查看采集状态"),
     ("collect:write", "启停采集"),
+    ("appeal:submit", "提交申诉（企业）"),
+    ("appeal:review", "审核申诉"),
+    ("project:read", "查看项目监管"),
+    ("project:write", "更新项目监管记录"),
 ]
 
 
 DEFAULT_ROLES: dict[str, list[str]] = {
     "admin": [code for code, _ in DEFAULT_PERMISSIONS],
-    "auditor": ["user:read", "alert:read", "alert:write", "ticket:read", "ticket:write", "audit:read", "collect:read"],
-    "gov": ["alert:read", "ticket:read", "collect:read"],
-    "business": ["user:read"],
+    "auditor": ["user:read", "alert:read", "alert:write", "ticket:read", "ticket:write",
+                "audit:read", "collect:read", "appeal:review", "project:read", "project:write"],
+    "gov": ["alert:read", "ticket:read", "collect:read", "appeal:review",
+            "project:read", "project:write"],
+    "business": ["user:read", "appeal:submit"],
     "guest": [],
 }
 

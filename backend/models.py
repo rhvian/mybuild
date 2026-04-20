@@ -123,3 +123,48 @@ class AlertAction(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_utcnow)
 
     alert: Mapped[Alert] = relationship("Alert", back_populates="actions")
+
+
+# ===== 企业认证申诉（B5c-1）=====
+
+class Appeal(Base):
+    """企业对信用评价 / 资质裁定 / 黑名单的申诉。"""
+    __tablename__ = "appeals"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    # 申诉主体
+    enterprise_key: Mapped[str] = mapped_column(String(64), nullable=False, index=True)
+    enterprise_name: Mapped[str] = mapped_column(String(256), nullable=False)
+    appellant_user_id: Mapped[int | None] = mapped_column(ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
+    # 申诉内容
+    category: Mapped[str] = mapped_column(String(32), default="other", index=True)  # credit/qualification/blacklist/other
+    title: Mapped[str] = mapped_column(String(256), nullable=False)
+    detail: Mapped[str] = mapped_column(Text, default="")
+    evidence_url: Mapped[str] = mapped_column(String(512), default="")
+    # 状态：submitted → under_review → approved / rejected / need_more（补充材料）→ resubmitted
+    status: Mapped[str] = mapped_column(String(16), default="submitted", index=True)
+    reviewer_id: Mapped[int | None] = mapped_column(ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
+    review_note: Mapped[str] = mapped_column(Text, default="")
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_utcnow, index=True)
+    reviewed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+
+
+# ===== 项目监管（B5c-2）=====
+
+class ProjectMonitor(Base):
+    """对建设项目的监管记录 —— 挂到 tender（通过 entity_key），不复制项目基本信息。"""
+    __tablename__ = "project_monitors"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    tender_key: Mapped[str] = mapped_column(String(64), nullable=False, index=True)
+    tender_name: Mapped[str] = mapped_column(String(256), nullable=False)
+    builder_name: Mapped[str] = mapped_column(String(256), default="")
+    risk_level: Mapped[str] = mapped_column(String(16), default="normal", index=True)  # high/medium/low/normal
+    supervision_level: Mapped[str] = mapped_column(String(16), default="routine")  # routine/key/priority
+    status: Mapped[str] = mapped_column(String(16), default="active", index=True)  # active/suspended/closed
+    inspection_count: Mapped[int] = mapped_column(Integer, default=0)
+    last_inspection_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    last_inspection_note: Mapped[str] = mapped_column(Text, default="")
+    created_by: Mapped[int | None] = mapped_column(ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_utcnow)
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_utcnow, onupdate=_utcnow)

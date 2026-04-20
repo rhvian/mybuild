@@ -18,7 +18,7 @@
 set -u
 
 PROJECT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-cd "$PROJECT_DIR"
+cd "$PROJECT_DIR" || exit 1
 
 PID_FILE="collector/data/collect.pid"
 LOG_DIR="collector/logs"

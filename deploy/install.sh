@@ -1,3 +1,4 @@
+#!/usr/bin/env bash
 # mybuild — 一键部署手册（对齐 v0.3 架构）
 #
 # 前提假设：

@@ -9,7 +9,7 @@
 set -u
 
 PROJECT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-cd "$PROJECT_DIR"
+cd "$PROJECT_DIR" || exit 1
 
 PID_FILE="collector/data/collect.pid"
 LOG_DIR="collector/logs"
@@ -26,9 +26,9 @@ while [ $# -gt 0 ]; do
 done
 
 if [ -t 1 ]; then
-  C_RESET='\033[0m'; C_BOLD='\033[1m'; C_GREEN='\033[32m'; C_YELLOW='\033[33m'; C_CYAN='\033[36m'; C_RED='\033[31m'; C_DIM='\033[2m'
+  C_RESET='\033[0m'; C_BOLD='\033[1m'; C_GREEN='\033[32m'; C_YELLOW='\033[33m'; C_CYAN='\033[36m'; C_DIM='\033[2m'
 else
-  C_RESET=''; C_BOLD=''; C_GREEN=''; C_YELLOW=''; C_CYAN=''; C_RED=''; C_DIM=''
+  C_RESET=''; C_BOLD=''; C_GREEN=''; C_YELLOW=''; C_CYAN=''; C_DIM=''
 fi
 
 head() { printf '%b== %s ==%b\n' "$C_BOLD$C_CYAN" "$*" "$C_RESET"; }
@@ -55,8 +55,9 @@ fi
 echo
 head "log (tail -n $TAIL_LINES)"
 if [ ! -e "$LATEST_LOG" ]; then
-  # 尝试找最新 log
-  LATEST_LOG="$(ls -1t "$LOG_DIR"/collect-*.log 2>/dev/null | grep -v latest | head -n1)"
+  # 尝试找最新 log（不用 ls|grep，用 glob + shellcheck 友好写法）
+  # shellcheck disable=SC2012
+  LATEST_LOG="$(find "$LOG_DIR" -maxdepth 1 -name 'collect-*.log' -not -name '*latest*' -printf '%T@ %p\n' 2>/dev/null | sort -rn | head -n1 | cut -d' ' -f2-)"
 fi
 if [ -n "${LATEST_LOG:-}" ] && [ -e "$LATEST_LOG" ]; then
   printf '  %bfile%b  %s\n' "$C_DIM" "$C_RESET" "$(readlink -f "$LATEST_LOG" 2>/dev/null || echo "$LATEST_LOG")"

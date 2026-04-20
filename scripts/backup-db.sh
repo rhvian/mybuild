@@ -12,7 +12,7 @@
 set -u
 
 PROJECT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-cd "$PROJECT_DIR"
+cd "$PROJECT_DIR" || exit 1
 
 BACKUP_DIR="${BACKUP_DIR:-/var/backups/mybuild}"
 KEEP_DAYS="${KEEP_DAYS:-30}"
@@ -44,7 +44,8 @@ backup_one() {
     cp "$src" "$dst"
   fi
   gzip -f "$dst"
-  local size="$(du -h "$dst.gz" | cut -f1)"
+  local size
+  size="$(du -h "$dst.gz" | cut -f1)"
   log "backed up $label -> $dst.gz ($size)"
 }
 

@@ -19,7 +19,7 @@
 set -u
 
 PROJECT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-cd "$PROJECT_DIR"
+cd "$PROJECT_DIR" || exit 1
 
 PYTHON="${PYTHON:-python3}"
 DO_INIT=1
