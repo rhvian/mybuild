@@ -1339,6 +1339,146 @@
 
 .muted { color: rgba(255, 255, 255, 0.4); }
 
+/* ===== 公共：disabled 链接 + WIP 标签 ===== */
+.link-disabled {
+  color: rgba(255, 255, 255, 0.32) !important;
+  cursor: not-allowed;
+  text-decoration: line-through;
+  text-decoration-color: rgba(255, 255, 255, 0.2);
+}
+
+.tag-wip {
+  display: inline-block;
+  margin-left: 8px;
+  padding: 1px 6px;
+  border-radius: 3px;
+  font-size: 10px;
+  letter-spacing: 0.6px;
+  color: #ffb445;
+  background: rgba(255, 180, 69, 0.12);
+  border: 1px solid rgba(255, 180, 69, 0.3);
+  vertical-align: middle;
+}
+
+.btn-social[disabled] {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+/* ===== 详情页降级横幅（?id 找不到 / 数据加载失败） ===== */
+.detail-banner {
+  display: flex;
+  gap: 14px;
+  align-items: flex-start;
+  margin: 16px 0;
+  padding: 16px 20px;
+  border-radius: 8px;
+  border-left: 4px solid;
+}
+.detail-banner .banner-icon {
+  flex: 0 0 auto;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 16px;
+}
+.detail-banner .banner-body h3 {
+  margin: 0 0 6px;
+  font-size: 16px;
+  font-weight: 600;
+}
+.detail-banner .banner-body p {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.65;
+  color: rgba(255, 255, 255, 0.72);
+}
+.detail-banner.banner-warn {
+  background: rgba(255, 180, 69, 0.08);
+  border-left-color: #ffb445;
+}
+.detail-banner.banner-warn .banner-icon {
+  background: rgba(255, 180, 69, 0.18);
+  color: #ffb445;
+}
+.detail-banner.banner-error {
+  background: rgba(248, 113, 113, 0.1);
+  border-left-color: #f87171;
+}
+.detail-banner.banner-error .banner-icon {
+  background: rgba(248, 113, 113, 0.2);
+  color: #f87171;
+}
+
+/* ===== 企业详情 license 面板的"资质列表"占位小节 ===== */
+.gov-subnote {
+  margin-top: 18px;
+  padding: 16px 18px;
+  border: 1px dashed rgba(255, 255, 255, 0.12);
+  border-radius: 6px;
+  background: rgba(43, 125, 233, 0.04);
+}
+.gov-subnote h4 {
+  margin: 0 0 8px;
+  font-size: 14px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.9);
+}
+.gov-subnote p {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.7;
+  color: rgba(255, 255, 255, 0.62);
+}
+.gov-subnote code {
+  padding: 1px 5px;
+  border-radius: 3px;
+  background: rgba(43, 125, 233, 0.14);
+  color: #86b7ff;
+  font-size: 12px;
+}
+
+/* ===== admin v0.3 说明横条 ===== */
+.admin-banner {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 0 0 0;
+  padding: 10px 20px;
+  background: linear-gradient(90deg, rgba(43, 125, 233, 0.12), rgba(43, 125, 233, 0.04));
+  border-bottom: 1px solid rgba(43, 125, 233, 0.25);
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.82);
+}
+.admin-banner-icon {
+  font-size: 18px;
+  color: #86b7ff;
+}
+.admin-banner-text {
+  flex: 1;
+  line-height: 1.5;
+}
+.admin-banner-text strong {
+  color: #86b7ff;
+  margin-right: 6px;
+}
+.admin-banner-close {
+  background: transparent;
+  border: 0;
+  color: rgba(255, 255, 255, 0.4);
+  font-size: 20px;
+  line-height: 1;
+  cursor: pointer;
+  padding: 0 6px;
+}
+.admin-banner-close:hover {
+  color: rgba(255, 255, 255, 0.85);
+}
+
 /* ===== Search Results ===== */
 .search-results {
   margin-top: 12px;

@@ -22,7 +22,11 @@ async function loadDetailData() {
   if (!root) return;
   const entityType = (root.dataset.entityType || "").toLowerCase();
   const id = new URLSearchParams(window.location.search).get("id");
-  if (!entityType || !id) return;
+  if (!entityType) return;
+  if (!id) {
+    showDetailBanner(root, "warn", "未携带 ?id= 参数", "请从企业库 / 人员库 / 项目库通过详情链接进入，直接打开本页无法定位具体记录。");
+    return;
+  }
 
   try {
     const resp = await fetch("../scripts/live-data.json", { cache: "no-store" });
@@ -31,7 +35,16 @@ async function loadDetailData() {
     detailDataCache = data;
     const list = data[entityType] || [];
     const item = list.find((x) => String(x.id) === String(id));
-    if (!item) return;
+    if (!item) {
+      const typeLabel = ({ enterprise: "企业", staff: "人员", tender: "项目" })[entityType] || entityType;
+      showDetailBanner(
+        root,
+        "warn",
+        `未找到 id=${id} 的${typeLabel}记录`,
+        `可能原因：① 本次导出的 live-data.json 采样截断（当前仅导出 6000 条/实体，更多记录需通过采集控制台重新全量导出）② 该 id 已归档或被删除 ③ URL 从外部复制后 id 值已过期。建议返回 <a href="../index.html#registry" class="link">主体库</a> 重新查询。`
+      );
+      return;
+    }
 
     if (entityType === "enterprise") {
       fillEnterprise(item);
@@ -44,6 +57,31 @@ async function loadDetailData() {
     }
   } catch (err) {
     console.error(err);
+    showDetailBanner(
+      root,
+      "error",
+      "数据加载失败",
+      `读取 live-data.json 出错：${String(err)}。可能是采集服务未启动或数据尚未导出。请联系管理员或访问<a href="admin.html" class="link">采集控制台</a>确认。`
+    );
+  }
+}
+
+function showDetailBanner(root, level, title, html) {
+  const banner = document.createElement("section");
+  banner.className = "detail-banner banner-" + (level || "info");
+  banner.innerHTML = `
+    <div class="banner-icon">${level === "error" ? "✕" : level === "warn" ? "!" : "i"}</div>
+    <div class="banner-body">
+      <h3>${title}</h3>
+      <p>${html}</p>
+    </div>
+  `;
+  // 插到 breadcrumb 之后、业务内容之前
+  const firstSection = root.querySelector("section");
+  if (firstSection && firstSection.parentNode) {
+    firstSection.parentNode.insertBefore(banner, firstSection);
+  } else {
+    root.appendChild(banner);
   }
 }
 

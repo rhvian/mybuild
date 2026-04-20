@@ -105,6 +105,13 @@
                 </tr>
               </tbody>
             </table>
+            <div class="gov-subnote">
+              <h4>资质证书列表</h4>
+              <p class="hint">
+                资质证书详情（证书编号 / 专业类别 / 等级 / 有效期）依赖企业详情页接口（规划 A2 / A3 阶段接入
+                <code>/APi/webApi/dataservice/query/comp/getQyAptCheckList</code>）。当前版本只采集企业主档，资质明细字段尚未入库。
+              </p>
+            </div>
           </article>
 
           <article class="dpanel hidden" id="panelStaff">
@@ -116,7 +123,10 @@
           </article>
 
           <article class="dpanel hidden" id="panelCredit">
-            <div class="gov-empty">信用记录接口字段正在扩展，当前已完成企业主档与来源追溯。</div>
+            <div class="gov-empty">
+              信用记录（红黑名单 / 行政处罚 / 诚信评分）依赖信用数据源接入（规划 A4 阶段：四库一平台诚信记录 + 信用中国 + 省级黑名单）。
+              当前版本仅展示企业主档与采集来源追溯，<code>credit</code> 实体类型尚未填充。
+            </div>
           </article>
         </section>
 
