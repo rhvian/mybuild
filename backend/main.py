@@ -10,7 +10,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from .bootstrap import bootstrap
 from .config import get_settings
 from .database import Base, SessionLocal, engine
-from .routers import auth, roles, system, users
+from .routers import alerts, auth, roles, system, users
 
 
 logger = logging.getLogger("mybuild.backend")
@@ -46,6 +46,7 @@ app.add_middleware(
 app.include_router(auth.router)
 app.include_router(users.router)
 app.include_router(roles.router)
+app.include_router(alerts.router)
 app.include_router(system.router)
 
 
@@ -56,6 +57,6 @@ def root() -> dict[str, object]:
         "version": app.version,
         "docs": "/docs",
         "endpoints": sorted(
-            r.path for r in app.routes if hasattr(r, "path") and r.path.startswith(("/auth", "/users", "/roles", "/system"))
+            r.path for r in app.routes if hasattr(r, "path") and r.path.startswith(("/auth", "/users", "/roles", "/alerts", "/system"))
         ),
     }

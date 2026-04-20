@@ -79,3 +79,47 @@ class AuditLog(Base):
     resource: Mapped[str] = mapped_column(String(128), default="")
     ip: Mapped[str] = mapped_column(String(64), default="")
     detail: Mapped[str] = mapped_column(Text, default="")
+
+
+# ===== 预警处置（B5b 业务流）=====
+
+class Alert(Base):
+    """预警 —— 由系统规则 / 外部告警源 / 人工录入产生的风险信号。"""
+    __tablename__ = "alerts"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    source: Mapped[str] = mapped_column(String(32), default="manual", index=True)
+    # 类别：quality / compliance / risk / complaint / other
+    category: Mapped[str] = mapped_column(String(32), default="other", index=True)
+    severity: Mapped[str] = mapped_column(String(16), default="medium", index=True)  # high/medium/low
+    title: Mapped[str] = mapped_column(String(256), nullable=False)
+    detail: Mapped[str] = mapped_column(Text, default="")
+    # 关联实体（可选）
+    entity_type: Mapped[str | None] = mapped_column(String(32), nullable=True)  # enterprise/staff/tender
+    entity_key: Mapped[str | None] = mapped_column(String(64), nullable=True, index=True)
+    entity_name: Mapped[str | None] = mapped_column(String(256), nullable=True)
+    # 状态：open / ack（已受理）/ resolved（已处置）/ dismissed（驳回）
+    status: Mapped[str] = mapped_column(String(16), default="open", index=True)
+    assignee_id: Mapped[int | None] = mapped_column(ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
+    created_by: Mapped[int | None] = mapped_column(ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_utcnow, index=True)
+    resolved_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    resolution_note: Mapped[str] = mapped_column(Text, default="")
+
+    actions: Mapped[list["AlertAction"]] = relationship(
+        "AlertAction", back_populates="alert", cascade="all, delete-orphan", lazy="selectin"
+    )
+
+
+class AlertAction(Base):
+    """预警操作历史 —— 每次受理 / 处置 / 评论都留痕。"""
+    __tablename__ = "alert_actions"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    alert_id: Mapped[int] = mapped_column(ForeignKey("alerts.id", ondelete="CASCADE"), nullable=False, index=True)
+    actor_id: Mapped[int | None] = mapped_column(ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
+    action: Mapped[str] = mapped_column(String(16), nullable=False)  # ack/resolve/dismiss/comment/reopen
+    note: Mapped[str] = mapped_column(Text, default="")
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_utcnow)
+
+    alert: Mapped[Alert] = relationship("Alert", back_populates="actions")

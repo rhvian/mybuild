@@ -46,7 +46,7 @@
       <div class="admin-banner" id="adminBanner">
         <span class="admin-banner-icon">&#9432;</span>
         <span class="admin-banner-text">
-          <strong>v0.3 演示版</strong> · 数据采集和业务流程持续完善中，右侧 4 个 "建设中" 模块为 L2 阶段规划项。
+          <strong>v0.4 · L2</strong> · 预警处置已对接 FastAPI 真实业务流；惩戒 / 项目监管 / 用户管理 3 项仍为占位。
         </span>
         <button class="admin-banner-close" aria-label="关闭" onclick="document.getElementById('adminBanner').style.display='none';">&times;</button>
       </div>
@@ -198,23 +198,147 @@
           </article>
         </section>
 
-        <!-- 预警处置（建设中） -->
+        <!-- 预警处置（v0.4 真实业务流） -->
         <section class="admin-section hidden" id="secWarnings">
-          <article class="panel placeholder-panel">
-            <div class="placeholder-head">
-              <h3>预警处置 · 建设中</h3>
-              <span class="badge-wip">v1.0 规划</span>
+          <div class="collect-grid" style="grid-template-columns: 1fr;">
+            <article class="panel">
+              <div class="collect-status-head">
+                <h3>预警看板</h3>
+                <span id="al-counts" class="muted-inline"></span>
+                <button class="btn btn-ghost btn-sm" id="al-refresh">刷新</button>
+                <button class="btn btn-primary btn-sm" id="al-new">新建预警</button>
+              </div>
+              <div class="admin-toolbar" style="padding:8px 0 12px">
+                <select id="al-f-status" class="admin-select">
+                  <option value="">全部状态</option>
+                  <option value="open">待处置 open</option>
+                  <option value="ack">受理中 ack</option>
+                  <option value="resolved">已处置 resolved</option>
+                  <option value="dismissed">已驳回 dismissed</option>
+                </select>
+                <select id="al-f-severity" class="admin-select">
+                  <option value="">全部等级</option>
+                  <option value="high">高 high</option>
+                  <option value="medium">中 medium</option>
+                  <option value="low">低 low</option>
+                </select>
+                <select id="al-f-category" class="admin-select">
+                  <option value="">全部类型</option>
+                  <option value="quality">质量风险 quality</option>
+                  <option value="compliance">合规风险 compliance</option>
+                  <option value="risk">履约/资金风险 risk</option>
+                  <option value="complaint">投诉 complaint</option>
+                  <option value="other">其他 other</option>
+                </select>
+                <input id="al-f-q" class="admin-search" type="text" placeholder="搜索标题 / 企业名 / 信用代码..." />
+              </div>
+              <table class="detail-table">
+                <thead>
+                  <tr>
+                    <th>ID</th><th>标题</th><th>类别</th><th>等级</th><th>状态</th><th>相关实体</th><th>创建时间</th><th>操作</th>
+                  </tr>
+                </thead>
+                <tbody id="al-body"><tr><td colspan="8" class="muted">加载中…</td></tr></tbody>
+              </table>
+              <div style="margin-top:12px;text-align:center">
+                <button class="btn btn-ghost" id="al-prev">上一页</button>
+                <span id="al-page" style="margin:0 14px">第 1 页</span>
+                <button class="btn btn-ghost" id="al-next">下一页</button>
+              </div>
+            </article>
+
+            <!-- 详情 / 操作面板（单选后展开） -->
+            <article class="panel hidden" id="al-detail-panel">
+              <div class="collect-status-head">
+                <h3>预警详情 <span id="al-d-id" class="muted-inline"></span></h3>
+                <button class="btn btn-ghost btn-sm" id="al-d-close">关闭</button>
+              </div>
+              <div id="al-d-body"></div>
+              <div style="border-top:1px solid var(--line);margin-top:14px;padding-top:14px">
+                <h4 style="margin:0 0 10px">处置操作</h4>
+                <div class="form-group">
+                  <textarea id="al-d-note" rows="3" placeholder="备注（处置说明 / 整改证据 / 驳回理由）"
+                    style="width:100%;padding:8px 10px;border:1px solid var(--line);border-radius:4px;background:rgba(0,0,0,0.15);color:#eee;font-family:inherit;font-size:13px;"></textarea>
+                </div>
+                <div class="collect-actions" id="al-d-actions">
+                  <!-- 根据当前状态动态填按钮 -->
+                </div>
+              </div>
+              <div style="border-top:1px solid var(--line);margin-top:14px;padding-top:14px">
+                <h4 style="margin:0 0 10px">操作时间线</h4>
+                <ul class="collect-health-list" id="al-d-timeline"></ul>
+              </div>
+            </article>
+          </div>
+        </section>
+
+        <!-- 新建预警模态（简化为面板切换） -->
+        <section class="admin-section hidden" id="secWarningsNew">
+          <article class="panel">
+            <div class="collect-status-head">
+              <h3>新建预警</h3>
+              <button class="btn btn-ghost btn-sm" id="al-new-cancel">返回列表</button>
             </div>
-            <p class="hint">
-              该模块在 L2 阶段启用，用于把"质量 / 履约 / 安全 / 资金"四类风险点从数据层自动生成工单，并走派单→审批→反馈→关闭闭环。
-            </p>
-            <ul class="feature-list">
-              <li>规则引擎：基于 <code>quality_issue</code> + 外部告警源生成 <code>alerts</code></li>
-              <li>工单表：派单 / 审批 / 备注 / 附件 / 关闭原因</li>
-              <li>角色权限：审核员处置、管理员复核</li>
-              <li>看板：按地区 / 类型 / 等级聚合</li>
-            </ul>
-            <p class="hint muted">当前 v0.3 为数据采集演示版，业务闭环未开放。</p>
+            <form id="al-new-form">
+              <div class="form-group">
+                <label>标题 *</label>
+                <input id="al-n-title" type="text" required maxlength="256" class="admin-search" style="width:100%">
+              </div>
+              <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px">
+                <div class="form-group">
+                  <label>类别</label>
+                  <select id="al-n-category" class="admin-select" style="width:100%">
+                    <option value="quality">质量 quality</option>
+                    <option value="compliance">合规 compliance</option>
+                    <option value="risk">履约/资金 risk</option>
+                    <option value="complaint">投诉 complaint</option>
+                    <option value="other" selected>其他 other</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label>等级</label>
+                  <select id="al-n-severity" class="admin-select" style="width:100%">
+                    <option value="high">高 high</option>
+                    <option value="medium" selected>中 medium</option>
+                    <option value="low">低 low</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label>来源标识</label>
+                  <input id="al-n-source" type="text" class="admin-search" placeholder="manual" value="manual" style="width:100%">
+                </div>
+              </div>
+              <div style="display:grid;grid-template-columns:1fr 1fr 2fr;gap:12px">
+                <div class="form-group">
+                  <label>关联实体类型</label>
+                  <select id="al-n-etype" class="admin-select" style="width:100%">
+                    <option value="">（不关联）</option>
+                    <option value="enterprise">enterprise 企业</option>
+                    <option value="staff">staff 人员</option>
+                    <option value="tender">tender 项目</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label>实体 key / USCC</label>
+                  <input id="al-n-ekey" type="text" class="admin-search" placeholder="91310000..." style="width:100%">
+                </div>
+                <div class="form-group">
+                  <label>实体名称</label>
+                  <input id="al-n-ename" type="text" class="admin-search" placeholder="某某建设集团..." style="width:100%">
+                </div>
+              </div>
+              <div class="form-group">
+                <label>详情</label>
+                <textarea id="al-n-detail" rows="5"
+                  style="width:100%;padding:8px 10px;border:1px solid var(--line);border-radius:4px;background:rgba(0,0,0,0.15);color:#eee;font-family:inherit;font-size:13px;"
+                  placeholder="风险描述 / 触发规则 / 证据..."></textarea>
+              </div>
+              <div class="collect-actions">
+                <button class="btn btn-primary" type="submit">提交</button>
+                <button class="btn btn-ghost" type="button" id="al-new-reset">重置</button>
+              </div>
+              <p class="hint muted" id="al-new-feedback"></p>
+            </form>
           </article>
         </section>
 
@@ -281,5 +405,6 @@
     <script src="../scripts/main.js"></script>
     <script src="../scripts/admin.js"></script>
     <script src="../scripts/admin-control.js"></script>
+    <script src="../scripts/admin-alerts.js"></script>
   </body>
 </html>

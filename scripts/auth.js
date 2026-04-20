@@ -1,22 +1,16 @@
-/* ===== Auth Page Logic =====
+/* ===== Auth Page Logic (v0.4 — JWT via backend /auth/login) =====
  *
- * L1 级最简认证（前端口令校验）：
- *   - 允许凭据的 SHA-256(`username:password`) 写在下方 ALLOWED_CREDS 白名单里
- *   - 默认口令：admin / build2026
- *   - 修改方式：在项目根运行
- *       python3 -c "import hashlib; print(hashlib.sha256(b'你的用户:你的口令').hexdigest())"
- *     把输出 hash 替换 ALLOWED_CREDS 数组里的条目即可
+ * 登录：POST /auth/login {email, password} → { access_token, refresh_token, expires_in }
+ * 存储：localStorage['cm_auth'] = { user, token, refresh_token, expires_at }
+ *   - token 既用于 backend（/auth /users /alerts 等），也兼容 control_server（/api/collect /api/health）
+ *     因为 control_server 已支持 HS256 JWT 验证（与 backend 共用 jwt_secret.key）
  *
- * 限制（已知）：
- *   - 前端可见的哈希不防拆包；只做"不让无关人随便进"
- *   - L2 阶段随 FastAPI + JWT 后端替换，本文件会废弃
+ * 默认凭据（生产环境必改）：admin@example.com / build2026
+ * 修改方式：在服务器上编辑 /etc/mybuild/backend.env
+ *   MYBUILD_BOOTSTRAP_ADMIN_EMAIL=...
+ *   MYBUILD_BOOTSTRAP_ADMIN_PASSWORD=...
+ * 然后通过 admin 后台 -> 用户管理 改密 / 加用户。
  */
-
-const ALLOWED_CREDS = [
-  // admin / build2026
-  "56cae9c8e0450378092d0e86824f175e91c11acc79cfc4d4f986e5cb4719192f",
-];
-const SESSION_MAX_AGE_MS = 8 * 60 * 60 * 1000; // 8h
 
 const authTabs = document.querySelectorAll(".auth-tab");
 const loginForm = document.getElementById("loginForm");
@@ -50,20 +44,13 @@ document.querySelectorAll(".toggle-pass").forEach((btn) => {
   });
 });
 
-async function sha256Hex(text) {
-  const buf = new TextEncoder().encode(text);
-  const digest = await crypto.subtle.digest("SHA-256", buf);
-  return Array.from(new Uint8Array(digest))
-    .map((b) => b.toString(16).padStart(2, "0"))
-    .join("");
-}
-
-function writeSession(user, token) {
+function writeSession(user, access, refresh, expiresIn) {
   const payload = {
     user,
-    token,
+    token: access,
+    refresh_token: refresh,
     issued_at: Date.now(),
-    expires_at: Date.now() + SESSION_MAX_AGE_MS,
+    expires_at: Date.now() + expiresIn * 1000,
   };
   try {
     localStorage.setItem("cm_auth", JSON.stringify(payload));
@@ -79,95 +66,53 @@ function backTarget() {
   return "admin.html";
 }
 
-async function verifyWithServer(user, pass) {
-  // 尝试调 control_server /api/auth/verify；服务不可用则回退
-  try {
-    const resp = await fetch("/api/auth/verify", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ user, password: pass }),
-    });
-    const data = await resp.json();
-    if (resp.status === 200 && data && data.ok && data.token) {
-      return { source: "server", ok: true, token: data.token };
-    }
-    if (resp.status === 401) {
-      return { source: "server", ok: false, error: "invalid_credentials" };
-    }
-    return { source: "server", ok: false, error: "server_error_" + resp.status };
-  } catch (e) {
-    return { source: "offline", ok: null };
-  }
-}
-
 if (loginForm) {
   loginForm.addEventListener("submit", async (e) => {
     e.preventDefault();
-    const user = document.getElementById("loginUser").value.trim();
+    const emailOrUser = document.getElementById("loginUser").value.trim();
     const pass = document.getElementById("loginPass").value;
 
-    if (!user || !pass) {
-      showMsg("请填写用户名和密码", "error");
+    if (!emailOrUser || !pass) {
+      showMsg("请填写账号和密码", "error");
       return;
     }
 
-    const clientHash = await sha256Hex(`${user}:${pass}`);
-    const srv = await verifyWithServer(user, pass);
-
-    if (srv.source === "server") {
-      if (!srv.ok) {
-        showMsg("用户名或密码错误", "error");
+    try {
+      const resp = await fetch("/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: emailOrUser, password: pass }),
+      });
+      if (resp.status === 429) {
+        const body = await resp.json().catch(() => ({}));
+        const wait = body?.detail?.retry_after_sec ?? 900;
+        showMsg(`登录尝试过于频繁，请 ${Math.ceil(wait / 60)} 分钟后再试`, "error");
         return;
       }
-      writeSession(user, srv.token);
+      if (resp.status === 401 || resp.status === 403) {
+        showMsg("账号或密码错误", "error");
+        return;
+      }
+      if (!resp.ok) {
+        showMsg(`登录失败：HTTP ${resp.status}`, "error");
+        return;
+      }
+      const data = await resp.json();
+      writeSession(emailOrUser, data.access_token, data.refresh_token, data.expires_in);
       showMsg("登录成功，正在跳转...", "success");
-    } else {
-      // 控制服务不可达，回退到纯前端校验
-      if (!ALLOWED_CREDS.includes(clientHash)) {
-        showMsg("用户名或密码错误", "error");
-        return;
-      }
-      writeSession(user, clientHash);
-      showMsg("登录成功（控制服务未运行，部分功能将不可用）", "info");
+      setTimeout(() => {
+        window.location.href = backTarget();
+      }, 500);
+    } catch (err) {
+      showMsg(`网络异常：${String(err)}（请确认 backend 已启动）`, "error");
     }
-
-    setTimeout(() => {
-      window.location.href = backTarget();
-    }, 700);
   });
 }
 
 if (registerForm) {
   registerForm.addEventListener("submit", (e) => {
     e.preventDefault();
-    const name = document.getElementById("regName").value.trim();
-    const code = document.getElementById("regCode").value.trim();
-    const phone = document.getElementById("regPhone").value.trim();
-    const pass = document.getElementById("regPass").value;
-    const pass2 = document.getElementById("regPass2").value;
-
-    if (!name || !code || !phone || !pass || !pass2) {
-      showMsg("请填写所有必填项", "error");
-      return;
-    }
-    if (code.length !== 18) {
-      showMsg("统一社会信用代码应为18位", "error");
-      return;
-    }
-    if (!/^1\d{10}$/.test(phone)) {
-      showMsg("请输入正确的手机号", "error");
-      return;
-    }
-    if (pass.length < 8 || !/[a-zA-Z]/.test(pass) || !/\d/.test(pass)) {
-      showMsg("密码需8-20位，包含字母和数字", "error");
-      return;
-    }
-    if (pass !== pass2) {
-      showMsg("两次输入的密码不一致", "error");
-      return;
-    }
-
-    showMsg("v0.3 暂未开放注册，请使用平台预设账号登录（默认 admin / build2026）", "info");
+    showMsg("v0.4 暂未开放自助注册。请联系管理员在 admin 后台 → 用户管理 中添加账号。", "info");
   });
 }
 

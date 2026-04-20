@@ -90,3 +90,62 @@ class HealthOut(BaseModel):
     status: str
     db: bool
     ts: datetime
+
+
+# ===== Alert 预警处置 =====
+
+class AlertCreate(BaseModel):
+    category: str = Field(default="other", max_length=32)
+    severity: str = Field(default="medium", pattern="^(high|medium|low)$")
+    title: str = Field(min_length=1, max_length=256)
+    detail: str = ""
+    entity_type: Optional[str] = Field(default=None, max_length=32)
+    entity_key: Optional[str] = Field(default=None, max_length=64)
+    entity_name: Optional[str] = Field(default=None, max_length=256)
+    source: str = Field(default="manual", max_length=32)
+
+
+class AlertActionIn(BaseModel):
+    action: str = Field(pattern="^(ack|resolve|dismiss|reopen|comment)$")
+    note: str = ""
+
+
+class AlertActionOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+    id: int
+    actor_id: Optional[int]
+    action: str
+    note: str
+    created_at: datetime
+
+
+class AlertOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+    id: int
+    source: str
+    category: str
+    severity: str
+    title: str
+    detail: str
+    entity_type: Optional[str]
+    entity_key: Optional[str]
+    entity_name: Optional[str]
+    status: str
+    assignee_id: Optional[int]
+    created_by: Optional[int]
+    created_at: datetime
+    resolved_at: Optional[datetime]
+    resolution_note: str
+
+
+class AlertDetailOut(AlertOut):
+    actions: list[AlertActionOut] = Field(default_factory=list)
+
+
+class AlertListOut(BaseModel):
+    total: int
+    page: int
+    size: int
+    pages: int
+    items: list[AlertOut]
+    counts_by_status: dict[str, int] = Field(default_factory=dict)

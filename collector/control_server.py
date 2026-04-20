@@ -76,6 +76,62 @@ def load_allowed_hashes() -> set[str]:
 ALLOWED_HASHES = load_allowed_hashes()
 
 
+# ===== JWT 兼容层（与 backend FastAPI 共用 secret，纯 stdlib 验证 HS256）=====
+
+BACKEND_JWT_SECRET_FILE = PROJECT_ROOT / "backend" / "data" / "jwt_secret.key"
+
+
+def _load_jwt_secret() -> Optional[str]:
+    """读 backend/data/jwt_secret.key；不存在则返回 None（禁用 JWT 路径）。"""
+    if not BACKEND_JWT_SECRET_FILE.exists():
+        return None
+    try:
+        s = BACKEND_JWT_SECRET_FILE.read_text(encoding="utf-8").strip()
+        return s or None
+    except Exception:
+        return None
+
+
+def _b64url_decode(data: str) -> bytes:
+    import base64
+    padding = "=" * (-len(data) % 4)
+    return base64.urlsafe_b64decode(data + padding)
+
+
+def _verify_hs256_jwt(token: str, secret: str) -> Optional[Dict[str, Any]]:
+    """仅支持 HS256，返回 payload dict 或 None。"""
+    import base64
+    import hashlib
+    import hmac
+    import time
+
+    try:
+        parts = token.split(".")
+        if len(parts) != 3:
+            return None
+        header_b64, payload_b64, sig_b64 = parts
+        # 校验 header alg=HS256
+        header = json.loads(_b64url_decode(header_b64))
+        if header.get("alg") != "HS256":
+            return None
+        # 验证签名
+        signing_input = f"{header_b64}.{payload_b64}".encode("ascii")
+        expected = hmac.new(secret.encode("utf-8"), signing_input, hashlib.sha256).digest()
+        actual = _b64url_decode(sig_b64)
+        if not hmac.compare_digest(expected, actual):
+            return None
+        payload = json.loads(_b64url_decode(payload_b64))
+        # 过期检查
+        if int(payload.get("exp", 0)) < int(time.time()):
+            return None
+        # 类型检查（只接受 access token，不接受 refresh）
+        if payload.get("type") not in (None, "access"):
+            return None
+        return payload
+    except Exception:
+        return None
+
+
 # ===== 认证失败限流（内存；进程重启清零）=====
 # key: client IP；value: (locked_until_epoch_or_0, fail_count, window_start_epoch)
 _AUTH_FAIL_STATE: Dict[str, Tuple[float, int, float]] = {}
@@ -327,8 +383,16 @@ class ControlHandler(BaseHTTPRequestHandler):
         header = self.headers.get("Authorization", "")
         if not header.startswith("Bearer "):
             return False
-        token = header[7:].strip().lower()
-        return token in ALLOWED_HASHES
+        token = header[7:].strip()
+        # 1) 试作 JWT（兼容 backend FastAPI 登录）
+        if token.count(".") == 2:
+            secret = _load_jwt_secret()
+            if secret:
+                payload = _verify_hs256_jwt(token, secret)
+                if payload is not None:
+                    return True
+        # 2) 退回 SHA-256 静态白名单（旧 L1 auth.js 用的路径）
+        return token.lower() in ALLOWED_HASHES
 
     # ===== 路由分发 =====
 
