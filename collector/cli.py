@@ -7,7 +7,7 @@ from pathlib import Path
 from .export_interface_catalog import export_interface_catalog
 from .export_live_data import export_live_json
 from .export_source_routes import export_source_routes_json
-from .pipeline import bootstrap_source_registry, run_pipeline
+from .pipeline import bootstrap_source_registry, run_pipeline, run_pipeline_streaming
 
 
 def _default_db_path() -> Path:
@@ -35,6 +35,25 @@ def build_parser() -> argparse.ArgumentParser:
         help="Force clear the existing run lock before pipeline starts.",
     )
 
+    stream_cmd = sub.add_parser(
+        "run-stream",
+        help="Run pipeline in streaming mode: commits after each batch, Ctrl+C-safe.",
+    )
+    stream_cmd.add_argument("--db", type=Path, default=_default_db_path())
+    stream_cmd.add_argument("--log-level", default="WARNING", choices=["DEBUG", "INFO", "WARNING", "ERROR"])
+    stream_cmd.add_argument("--force-unlock", action="store_true")
+    stream_cmd.add_argument(
+        "--skip-export",
+        action="store_true",
+        help="Skip re-exporting scripts/live-data.json and scripts/source-routes.json at end.",
+    )
+    stream_cmd.add_argument(
+        "--source-id",
+        action="append",
+        default=None,
+        help="Only run the given source_id (can be repeated, or comma-separated). Overrides sources.json enabled flags.",
+    )
+
     export_cmd = sub.add_parser("export-interfaces", help="Export nationwide interface candidates.")
     export_cmd.add_argument("--db", type=Path, default=_default_db_path())
     export_cmd.add_argument("--output", type=Path, default=None)
@@ -60,7 +79,7 @@ def cmd_run(db: Path, force_unlock: bool = False) -> None:
     export_live_json(
         db_path=db,
         output_path=project_root / "scripts" / "live-data.json",
-        limit_each=6000,
+        limit_each=20000,
     )
     export_source_routes_json(
         db_path=db,
@@ -115,6 +134,44 @@ def cmd_export_interfaces(
     print(f"[export-interfaces] written: {output_path}")
 
 
+def cmd_run_stream(
+    db: Path,
+    force_unlock: bool = False,
+    skip_export: bool = False,
+    source_ids: list[str] | None = None,
+) -> None:
+    if force_unlock:
+        print("[run-stream] force-unlock enabled: clearing existing run lock before starting", flush=True)
+    try:
+        summary = run_pipeline_streaming(
+            db_path=db,
+            force_unlock=force_unlock,
+            source_ids=source_ids,
+        )
+    except KeyboardInterrupt:
+        print("\n[run-stream] interrupted; partial data already committed to DB", flush=True)
+        return
+    project_root = Path(__file__).resolve().parent.parent
+    if not skip_export:
+        print("[run-stream] exporting scripts/live-data.json and scripts/source-routes.json ...", flush=True)
+        export_live_json(
+            db_path=db,
+            output_path=project_root / "scripts" / "live-data.json",
+            limit_each=6000,
+        )
+        export_source_routes_json(
+            db_path=db,
+            output_path=project_root / "scripts" / "source-routes.json",
+            limit_each=600,
+        )
+    print(
+        f"[run-stream] done run_id={summary.run_id} "
+        f"raw={summary.raw_count} norm={summary.normalized_count} "
+        f"issues={summary.issue_count} failed_sources={summary.failed_source_count}",
+        flush=True,
+    )
+
+
 def main() -> None:
     parser = build_parser()
     args = parser.parse_args()
@@ -128,6 +185,26 @@ def main() -> None:
             format="%(asctime)s %(levelname)s %(name)s %(message)s",
         )
         cmd_run(db=args.db, force_unlock=args.force_unlock)
+        return
+    if args.command == "run-stream":
+        logging.basicConfig(
+            level=getattr(logging, args.log_level),
+            format="%(asctime)s %(levelname)s %(name)s %(message)s",
+        )
+        # --source-id 可多次出现或逗号分隔
+        raw_ids = args.source_id or []
+        expanded: list[str] = []
+        for item in raw_ids:
+            for part in str(item).split(","):
+                s = part.strip()
+                if s:
+                    expanded.append(s)
+        cmd_run_stream(
+            db=args.db,
+            force_unlock=args.force_unlock,
+            skip_export=args.skip_export,
+            source_ids=expanded or None,
+        )
         return
     if args.command == "export-interfaces":
         cmd_export_interfaces(

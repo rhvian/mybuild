@@ -9,7 +9,7 @@ import ssl
 import time
 import urllib.parse
 import urllib.request
-from typing import Dict, Iterable, List, Sequence, Type
+from typing import Callable, Dict, Iterable, List, Sequence, Type
 
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
@@ -72,9 +72,38 @@ class JzscLiveConnectorBase(BaseConnector):
     decrypt_key = b"Dt8j9wGw%6HbxfFn"
     decrypt_iv = b"0123456789ABCDEF"
     page_size = 15
-    max_pages = 100
+    # JZSC 反爬机制：无筛选时 API 在第 31 页后返回 "服务器繁忙" (code 401)。
+    # 单次查询硬上限约 465 条；突破方法是按地区/资质等维度分批查询。
+    max_pages = 35
+    # 地区筛选参数名（None 表示不按地区拆分）
+    region_param: str | None = None
+    # 要遍历的地区代码列表（None 表示不拆分）
+    region_codes: List[str] | None = None
+    # 连续两批 API 失败时退出循环，避免持续 401 浪费
+    max_consecutive_failures = 2
+    # 去重 key 字段名（同一实体多批查询可能重复）
+    dedup_field: str | None = None
+    # 每 N 批主动刷 browser session（默认 8，对 ry_qymc 细粒度查询可调大）
+    browser_refresh_every: int = 8
 
     def fetch(self) -> Sequence[RawRecord]:
+        # 按地区筛选批量采集（在一个浏览器会话内遍历所有 region），避免每省重启 playwright 的高开销。
+        batches = self._prepare_batches()
+        if batches:
+            rows = _collect_batched_sync(
+                base_url=self.source.base_url,
+                page_path=self.page_path,
+                api_path=self.api_path,
+                page_size=self.page_size,
+                max_pages_per_batch=self.max_pages,
+                decrypt_key=self.decrypt_key,
+                decrypt_iv=self.decrypt_iv,
+                batches=batches,
+                dedup_field=self.dedup_field,
+                max_consecutive_empty_batches=self.max_consecutive_failures,
+                progress_tag=self.source.source_id,
+            )
+            return self._map_rows(rows)
         rows = _collect_pages_sync(
             base_url=self.source.base_url,
             page_path=self.page_path,
@@ -86,6 +115,61 @@ class JzscLiveConnectorBase(BaseConnector):
         )
         return self._map_rows(rows)
 
+    def iter_fetch_batches(
+        self,
+        on_batch: "Callable[[str, List[RawRecord]], None]",
+    ) -> None:
+        """
+        流式采集：每完成一个 batch 就调用 on_batch(batch_label, records)。
+        调用方（pipeline）可在 callback 中立即 insert+commit，实现 per-batch 持久化。
+        对于不支持 region 拆分的连接器，整个结果作为单个 batch 'all' 调用一次 on_batch。
+        """
+        batches = self._prepare_batches()
+        if batches:
+            def _raw_batch_cb(batch_label: str, raw_rows: List[Dict]) -> None:
+                records = self._map_rows(raw_rows)
+                if records:
+                    on_batch(batch_label, list(records))
+
+            _collect_batched_sync(
+                base_url=self.source.base_url,
+                page_path=self.page_path,
+                api_path=self.api_path,
+                page_size=self.page_size,
+                max_pages_per_batch=self.max_pages,
+                decrypt_key=self.decrypt_key,
+                decrypt_iv=self.decrypt_iv,
+                batches=batches,
+                dedup_field=self.dedup_field,
+                max_consecutive_empty_batches=self.max_consecutive_failures,
+                progress_tag=self.source.source_id,
+                on_batch=_raw_batch_cb,
+            )
+            return
+        # 无 batch 拆分 —— 整包返回作为单 batch
+        rows = _collect_pages_sync(
+            base_url=self.source.base_url,
+            page_path=self.page_path,
+            api_path=self.api_path,
+            page_size=self.page_size,
+            max_pages=self.max_pages,
+            decrypt_key=self.decrypt_key,
+            decrypt_iv=self.decrypt_iv,
+        )
+        records = self._map_rows(rows)
+        if records:
+            on_batch("all", list(records))
+
+    def _prepare_batches(self) -> List[Dict[str, str]]:
+        """
+        生成本次采集的筛选批次列表，每个元素是一组 query 参数。
+        默认基于 region_param / region_codes（即静态的地区循环）。
+        子类可 override 以动态生成（例如从 DB 读企业名清单）。
+        """
+        if self.region_param and self.region_codes:
+            return [{self.region_param: code} for code in self.region_codes]
+        return []
+
     def _map_rows(self, rows: List[Dict]) -> List[RawRecord]:
         raise NotImplementedError
 
@@ -96,6 +180,20 @@ class JzscCompanyLiveConnector(JzscLiveConnectorBase):
     api_path = "/APi/webApi/dataservice/query/comp/list"
     record_type = "enterprise"
     entity_type = "enterprise"
+    # 按省份筛选突破 500 条硬上限。全国 31 省 × 465 ≈ 14,415 条/次。
+    region_param = "qy_region"
+    region_codes = [
+        "110000", "120000", "130000", "140000", "150000",  # 京津冀晋蒙
+        "210000", "220000", "230000",                       # 辽吉黑
+        "310000", "320000", "330000", "340000", "350000",   # 沪苏浙皖闽
+        "360000", "370000",                                 # 赣鲁
+        "410000", "420000", "430000",                       # 豫鄂湘
+        "440000", "450000", "460000",                       # 粤桂琼
+        "500000", "510000", "520000", "530000",             # 渝川黔滇
+        "540000",                                           # 藏
+        "610000", "620000", "630000", "640000", "650000",   # 陕甘青宁新
+    ]
+    dedup_field = "QY_ID"
 
     def _map_rows(self, rows: List[Dict]) -> List[RawRecord]:
         records: List[RawRecord] = []
@@ -237,6 +335,162 @@ class JzscProjectLiveConnector(JzscLiveConnectorBase):
                         "data_level": data_level,
                         "is_fake": is_fake,
                         "source_business_type": "jzsc_project_list",
+                    },
+                )
+            )
+        return records
+
+
+def _load_company_names_from_db(limit: int = 20000) -> List[str]:
+    """
+    从 collector.db 读取已采集企业的 QY_NAME，用于后续按企业反查人员 / 项目。
+    只返回最新一次 enterprise run 的企业名，避免重复。
+    """
+    import sqlite3
+    from pathlib import Path
+
+    db_path = Path(__file__).resolve().parent / "data" / "collector.db"
+    if not db_path.exists():
+        return []
+    conn = sqlite3.connect(db_path)
+    try:
+        rows = conn.execute(
+            """
+            SELECT DISTINCT name
+            FROM normalized_entity
+            WHERE entity_type='enterprise' AND name != ''
+            ORDER BY id DESC
+            LIMIT ?
+            """,
+            (limit,),
+        ).fetchall()
+    finally:
+        conn.close()
+    return [r[0] for r in rows if r[0]]
+
+
+class JzscStaffByCompanyConnector(JzscLiveConnectorBase):
+    """
+    按企业名反查人员：staff/list?ry_qymc=<企业全名>
+    绕过 staff API 500 条累计硬限。每家企业拿到 0-465 条注册人员。
+    """
+    source_type = "jzsc_staff_by_company_live"
+    page_path = "/data/person"
+    api_path = "/APi/webApi/dataservice/query/staff/list"
+    record_type = "staff"
+    entity_type = "staff"
+    max_pages = 35  # 每家企业几乎没到 31 页（大企业才几十上百人），留够余量
+    dedup_field = "RY_ID"
+    max_consecutive_failures = 10  # 大量企业查不到人员是正常的，不能过早中止
+    # 每家企业独立查询（不共用 session，但同一 browser）
+    # browser_refresh_every 由 _collect_batched 的默认 8 控制
+
+    def _prepare_batches(self) -> List[Dict[str, str]]:
+        # 从 DB 拿已采企业名，每家企业一次查询
+        names = _load_company_names_from_db(limit=20000)
+        return [{"ry_qymc": name} for name in names]
+
+    def _map_rows(self, rows: List[Dict]) -> List[RawRecord]:
+        records: List[RawRecord] = []
+        for idx, row in enumerate(rows, start=1):
+            name = str(row.get("RY_NAME", "")).strip()
+            masked_id = str(row.get("RY_CARDNO", "")).strip()
+            reg_type = str(row.get("REG_TYPE_NAME", "")).strip()
+            reg_no = str(row.get("REG_SEAL_CODE", "")).strip()
+            reg_qy_name = str(row.get("REG_QYMC", "")).strip()
+            reg_qy_id = str(row.get("REG_QYID", "")).strip()
+            reg_type_code = str(row.get("REG_TYPE", "")).strip()
+            reg_sdate = row.get("REG_SDATE")
+            staff_id = str(row.get("RY_ID", "")).strip()
+
+            records.append(
+                RawRecord(
+                    source_id=self.source.source_id,
+                    source_name=self.source.name,
+                    source_level=self.source.source_level,
+                    source_url=f"{self.source.base_url}{self.api_path}",
+                    record_type=self.record_type,
+                    province_code=self.source.province_code or "000000",
+                    city_code=self.source.city_code or "110000",
+                    city_name="全国",
+                    payload={
+                        "entity_type": self.entity_type,
+                        "name": name,
+                        "uscc": "",
+                        "project_code": staff_id or reg_no or f"STAFF-{idx}",
+                        "score": 80,
+                        "status": "ACTIVE",
+                        "event_date": _epoch_ms_to_date(reg_sdate),
+                        "person_id_no_masked": masked_id,
+                        "register_type": reg_type,
+                        "register_no": reg_no,
+                        "register_corp_name": reg_qy_name,
+                        "register_corp_id": reg_qy_id,
+                        "register_type_code": reg_type_code,
+                        "source_business_type": "jzsc_staff_by_company",
+                    },
+                )
+            )
+        return records
+
+
+class JzscProjectByCompanyConnector(JzscLiveConnectorBase):
+    """
+    按承建单位反查项目：project/list?buildCorpName=<企业全名>
+    绕过 project API 500 条累计硬限。每家企业拿到其作为建设单位的所有项目。
+    """
+    source_type = "jzsc_project_by_company_live"
+    page_path = "/data/project"
+    api_path = "/APi/webApi/dataservice/query/project/list"
+    record_type = "tender"
+    entity_type = "tender"
+    max_pages = 35
+    dedup_field = "ID"
+    max_consecutive_failures = 10
+
+    def _prepare_batches(self) -> List[Dict[str, str]]:
+        names = _load_company_names_from_db(limit=20000)
+        return [{"buildCorpName": name} for name in names]
+
+    def _map_rows(self, rows: List[Dict]) -> List[RawRecord]:
+        records: List[RawRecord] = []
+        for idx, row in enumerate(rows, start=1):
+            project_name = str(row.get("PRJNAME", "")).strip()
+            project_code = str(row.get("PRJNUM", "")).strip()
+            project_id = str(row.get("ID", "")).strip()
+            project_type = str(row.get("PRJTYPENUM", "")).strip()
+            builder = str(row.get("BUILDCORPNAME", "")).strip()
+            data_level = str(row.get("DATALEVEL", "")).strip()
+            is_fake = row.get("IS_FAKE")
+            collect_time = row.get("LASTUPDATEDATE")
+
+            city_code = self.source.city_code or "110000"
+            province_code = _to_province_code(city_code)
+            event_date = _epoch_ms_to_date(collect_time)
+
+            records.append(
+                RawRecord(
+                    source_id=self.source.source_id,
+                    source_name=self.source.name,
+                    source_level=self.source.source_level,
+                    source_url=f"{self.source.base_url}{self.api_path}",
+                    record_type=self.record_type,
+                    province_code=province_code,
+                    city_code=city_code,
+                    city_name="全国",
+                    payload={
+                        "entity_type": self.entity_type,
+                        "name": project_name,
+                        "uscc": "",
+                        "project_code": project_code or project_id or f"PRJ-{idx}",
+                        "score": 80,
+                        "status": "OPEN",
+                        "event_date": event_date,
+                        "project_type": project_type,
+                        "builder_name": builder,
+                        "data_level": data_level,
+                        "is_fake": is_fake,
+                        "source_business_type": "jzsc_project_by_company",
                     },
                 )
             )
@@ -414,11 +668,26 @@ async def _collect_pages_async(
     max_pages: int,
     decrypt_key: bytes,
     decrypt_iv: bytes,
+    extra_query: Dict[str, str] | None = None,
 ) -> List[Dict]:
     all_rows: List[Dict] = []
+    extra_qs = ""
+    if extra_query:
+        parts = [f"{k}={urllib.parse.quote(str(v))}" for k, v in extra_query.items() if v is not None]
+        if parts:
+            extra_qs = "&" + "&".join(parts)
 
     async with async_playwright() as p:
-        browser = await p.chromium.launch(headless=True)
+        browser = await p.chromium.launch(
+            headless=True,
+            args=[
+                "--ignore-certificate-errors",
+                "--ignore-certificate-errors-spki-list",
+                "--allow-insecure-localhost",
+                "--allow-running-insecure-content",
+                "--disable-features=BlockInsecurePrivateNetworkRequests",
+            ],
+        )
         context = await browser.new_context(ignore_https_errors=True)
         page = await context.new_page()
         await page.goto(f"{base_url}{page_path}", wait_until="domcontentloaded", timeout=120000)
@@ -427,8 +696,8 @@ async def _collect_pages_async(
         for pg in range(max_pages):
             cipher = await page.evaluate(
                 """
-                async ({apiPath, pg, pgsz}) => {
-                  const url = `${apiPath}?pg=${pg}&pgsz=${pgsz}&total=0`;
+                async ({apiPath, pg, pgsz, extraQs}) => {
+                  const url = `${apiPath}?pg=${pg}&pgsz=${pgsz}&total=0${extraQs}`;
                   const resp = await fetch(url, {
                     credentials: 'include',
                     headers: { v: '231012', accessToken: '' }
@@ -436,7 +705,7 @@ async def _collect_pages_async(
                   return await resp.text();
                 }
                 """,
-                {"apiPath": api_path, "pg": pg, "pgsz": page_size},
+                {"apiPath": api_path, "pg": pg, "pgsz": page_size, "extraQs": extra_qs},
             )
             if not cipher:
                 break
@@ -470,6 +739,7 @@ def _collect_pages_sync(
     max_pages: int,
     decrypt_key: bytes,
     decrypt_iv: bytes,
+    extra_query: Dict[str, str] | None = None,
 ) -> List[Dict]:
     return asyncio.run(
         _collect_pages_async(
@@ -480,6 +750,256 @@ def _collect_pages_sync(
             max_pages=max_pages,
             decrypt_key=decrypt_key,
             decrypt_iv=decrypt_iv,
+            extra_query=extra_query,
+        )
+    )
+
+
+async def _collect_batched_async(
+    base_url: str,
+    page_path: str,
+    api_path: str,
+    page_size: int,
+    max_pages_per_batch: int,
+    decrypt_key: bytes,
+    decrypt_iv: bytes,
+    batches: List[Dict[str, str]],
+    dedup_field: str | None = None,
+    max_consecutive_empty_batches: int = 3,
+    per_call_timeout_sec: float = 25.0,
+    progress_tag: str = "",
+    on_batch: "Callable[[str, List[Dict]], None] | None" = None,
+    browser_refresh_every: int = 8,
+    max_refreshes_on_empty: int = 4,
+) -> List[Dict]:
+    """
+    在浏览器会话内顺序处理多个 extra_query 批次（例如 31 省份）。
+
+    - 每 `browser_refresh_every` 批主动重启 browser/context/page，清除 cookie 和
+      session-level 反爬计数（JZSC 每个 session 累计 API 调用到阈值会 401）。
+    - 触发连续空批后，会额外尝试刷新 browser 最多 `max_refreshes_on_empty` 次。
+    - 任何成功批次都重置 refresh_on_empty 计数。
+    - on_batch：每批完成时同步回调，pipeline 层可 insert+commit 实现流式持久化。
+    """
+    import sys as _sys
+
+    all_rows: List[Dict] = []
+    seen: set[str] = set()
+    consecutive_empty = 0
+    batches_since_refresh = 0
+    refreshes_on_empty = 0
+    refresh_count = 0
+
+    def _log(msg: str) -> None:
+        print(f"[batched {progress_tag}] {msg}", file=_sys.stderr, flush=True)
+
+    async with async_playwright() as p:
+        browser = None
+        context = None
+        page = None
+
+        async def _open_session() -> bool:
+            """(Re)create browser + context + page and navigate to list page."""
+            nonlocal browser, context, page, refresh_count
+            if context is not None:
+                try:
+                    await context.close()
+                except Exception:  # noqa: BLE001
+                    pass
+            if browser is not None:
+                try:
+                    await browser.close()
+                except Exception:  # noqa: BLE001
+                    pass
+            browser = await p.chromium.launch(
+                headless=True,
+                args=[
+                    "--ignore-certificate-errors",
+                    "--ignore-certificate-errors-spki-list",
+                    "--allow-insecure-localhost",
+                    "--allow-running-insecure-content",
+                    "--disable-features=BlockInsecurePrivateNetworkRequests",
+                ],
+            )
+            context = await browser.new_context(ignore_https_errors=True)
+            page = await context.new_page()
+            page.set_default_timeout(int(per_call_timeout_sec * 1000))
+            for attempt in range(2):
+                try:
+                    await page.goto(f"{base_url}{page_path}", wait_until="domcontentloaded", timeout=60000)
+                    break
+                except Exception as e:  # noqa: BLE001
+                    _log(f"session goto failed (attempt {attempt+1}): {e!r}")
+            else:
+                return False
+            await page.wait_for_timeout(1200)
+            refresh_count += 1
+            return True
+
+        if not await _open_session():
+            _log("initial session open failed; abort")
+            return all_rows
+        _log(f"page loaded (session #{refresh_count}), starting {len(batches)} batches")
+
+        bi = 0
+        while bi < len(batches):
+            batch = batches[bi]
+            # 主动轮换：每 N 批刷 session，防止累计反爬
+            if batches_since_refresh >= browser_refresh_every:
+                _log(f"proactive browser refresh after {batches_since_refresh} batches (session #{refresh_count+1})")
+                ok = await _open_session()
+                if not ok:
+                    _log("refresh failed; abort")
+                    break
+                batches_since_refresh = 0
+                consecutive_empty = 0
+
+            extra_qs = ""
+            parts = [f"{k}={urllib.parse.quote(str(v))}" for k, v in batch.items() if v is not None]
+            if parts:
+                extra_qs = "&" + "&".join(parts)
+            batch_label = ",".join(f"{k}={v}" for k, v in batch.items())
+
+            batch_rows: List[Dict] = []
+            stopped_at_page = -1
+            for pg in range(max_pages_per_batch):
+                try:
+                    cipher = await asyncio.wait_for(
+                        page.evaluate(
+                            """
+                            async ({apiPath, pg, pgsz, extraQs}) => {
+                              const url = `${apiPath}?pg=${pg}&pgsz=${pgsz}&total=0${extraQs}`;
+                              const resp = await fetch(url, {
+                                credentials: 'include',
+                                headers: { v: '231012', accessToken: '' }
+                              });
+                              return await resp.text();
+                            }
+                            """,
+                            {"apiPath": api_path, "pg": pg, "pgsz": page_size, "extraQs": extra_qs},
+                        ),
+                        timeout=per_call_timeout_sec,
+                    )
+                except (asyncio.TimeoutError, Exception):  # noqa: BLE001
+                    stopped_at_page = pg
+                    break
+                if not cipher:
+                    stopped_at_page = pg
+                    break
+                payload = _try_decode_payload(cipher, decrypt_key, decrypt_iv)
+                if not payload:
+                    stopped_at_page = pg
+                    break
+                rows = payload.get("data", {}).get("list", [])
+                if not isinstance(rows, list) or not rows:
+                    stopped_at_page = pg
+                    break
+                batch_rows.extend(rows)
+                if len(rows) < page_size:
+                    stopped_at_page = pg + 1
+                    break
+                await page.wait_for_timeout(200)
+
+            _log(f"batch {bi+1}/{len(batches)} [{batch_label}] rows={len(batch_rows)} stopped@page={stopped_at_page}")
+            batches_since_refresh += 1
+
+            if not batch_rows:
+                consecutive_empty += 1
+                if consecutive_empty >= max_consecutive_empty_batches:
+                    if refreshes_on_empty < max_refreshes_on_empty:
+                        _log(
+                            f"empty streak (consecutive={consecutive_empty}) -> refresh browser "
+                            f"({refreshes_on_empty+1}/{max_refreshes_on_empty}), will retry batch {bi+1}"
+                        )
+                        ok = await _open_session()
+                        if not ok:
+                            _log("refresh-on-empty failed; abort")
+                            break
+                        batches_since_refresh = 0
+                        consecutive_empty = 0
+                        refreshes_on_empty += 1
+                        # 新 session 后重试当前 batch（不 +=1，下轮循环同一个 bi）
+                        continue
+                    _log(f"giving up after {refreshes_on_empty} empty-refreshes")
+                    break
+                await page.wait_for_timeout(800)
+                bi += 1
+                continue
+            consecutive_empty = 0
+            refreshes_on_empty = 0  # 成功批次，重置失败计数
+
+            if dedup_field:
+                new_rows: List[Dict] = []
+                for r in batch_rows:
+                    k = str(r.get(dedup_field, ""))
+                    if k and k not in seen:
+                        seen.add(k)
+                        new_rows.append(r)
+                all_rows.extend(new_rows)
+                streamed_rows = new_rows
+            else:
+                all_rows.extend(batch_rows)
+                streamed_rows = batch_rows
+
+            # 流式回调：让 pipeline 层立即 insert+commit 当前 batch
+            if on_batch is not None and streamed_rows:
+                try:
+                    on_batch(batch_label, streamed_rows)
+                except Exception as e:  # noqa: BLE001
+                    _log(f"on_batch callback error: {e!r}")
+
+            await page.wait_for_timeout(400)
+            bi += 1
+
+        _log(f"done: total_rows={len(all_rows)} refresh_count={refresh_count}")
+        if context is not None:
+            try:
+                await context.close()
+            except Exception:  # noqa: BLE001
+                pass
+        if browser is not None:
+            try:
+                await browser.close()
+            except Exception:  # noqa: BLE001
+                pass
+
+    return all_rows
+
+
+def _collect_batched_sync(
+    base_url: str,
+    page_path: str,
+    api_path: str,
+    page_size: int,
+    max_pages_per_batch: int,
+    decrypt_key: bytes,
+    decrypt_iv: bytes,
+    batches: List[Dict[str, str]],
+    dedup_field: str | None = None,
+    max_consecutive_empty_batches: int = 3,
+    per_call_timeout_sec: float = 25.0,
+    progress_tag: str = "",
+    on_batch: "Callable[[str, List[Dict]], None] | None" = None,
+    browser_refresh_every: int = 8,
+    max_refreshes_on_empty: int = 4,
+) -> List[Dict]:
+    return asyncio.run(
+        _collect_batched_async(
+            base_url=base_url,
+            page_path=page_path,
+            api_path=api_path,
+            page_size=page_size,
+            max_pages_per_batch=max_pages_per_batch,
+            decrypt_key=decrypt_key,
+            decrypt_iv=decrypt_iv,
+            batches=batches,
+            dedup_field=dedup_field,
+            max_consecutive_empty_batches=max_consecutive_empty_batches,
+            per_call_timeout_sec=per_call_timeout_sec,
+            progress_tag=progress_tag,
+            on_batch=on_batch,
+            browser_refresh_every=browser_refresh_every,
+            max_refreshes_on_empty=max_refreshes_on_empty,
         )
     )
 
@@ -527,7 +1047,16 @@ def _fetch_html_with_fallback(url: str) -> tuple[str, str]:
     # 2) playwright fallback for JS-heavy/anti-bot pages
     async def _pw() -> tuple[str, str]:
         async with async_playwright() as p:
-            browser = await p.chromium.launch(headless=True)
+            browser = await p.chromium.launch(
+                headless=True,
+                args=[
+                    "--ignore-certificate-errors",
+                    "--ignore-certificate-errors-spki-list",
+                    "--allow-insecure-localhost",
+                    "--allow-running-insecure-content",
+                    "--disable-features=BlockInsecurePrivateNetworkRequests",
+                ],
+            )
             context = await browser.new_context(ignore_https_errors=True)
             page = await context.new_page()
             await page.goto(url, wait_until="domcontentloaded", timeout=120000)
@@ -651,6 +1180,8 @@ CONNECTOR_REGISTRY: Dict[str, Type[BaseConnector]] = {
     JzscCompanyLiveConnector.source_type: JzscCompanyLiveConnector,
     JzscStaffLiveConnector.source_type: JzscStaffLiveConnector,
     JzscProjectLiveConnector.source_type: JzscProjectLiveConnector,
+    JzscStaffByCompanyConnector.source_type: JzscStaffByCompanyConnector,
+    JzscProjectByCompanyConnector.source_type: JzscProjectByCompanyConnector,
     ProvincePortalIndexConnector.source_type: ProvincePortalIndexConnector,
     ProvinceEntryProbeConnector.source_type: ProvinceEntryProbeConnector,
 }

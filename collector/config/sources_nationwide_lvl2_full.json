@@ -254,7 +254,7 @@
     "name": "广西省级平台入口索引",
     "source_type": "province_portal_index_live",
     "source_level": "B",
-    "base_url": "https://gxjzsc.gxcic.net/",
+    "base_url": "http://gxjzsc.gxcic.net/",
     "province_code": "000000",
     "city_code": "000000",
     "enabled": true
@@ -274,7 +274,7 @@
     "name": "海南省级平台入口索引",
     "source_type": "province_portal_index_live",
     "source_level": "B",
-    "base_url": "http://www.hizj.net:8008/PublishWeb/Default.aspx",
+    "base_url": "https://zjt.hainan.gov.cn/",
     "province_code": "000000",
     "city_code": "000000",
     "enabled": true
@@ -314,7 +314,7 @@
     "name": "陕西省级平台入口索引",
     "source_type": "province_portal_index_live",
     "source_level": "B",
-    "base_url": "http://jzscyth.shaanxi.gov.cn:7001/PDR/network/credit/home",
+    "base_url": "http://js.shaanxi.gov.cn/",
     "province_code": "000000",
     "city_code": "000000",
     "enabled": true

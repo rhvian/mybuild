@@ -1,0 +1,16 @@
+[Unit]
+Description=mybuild — 健康检查（失败走 alert-mail.sh）
+After=network.target
+
+[Service]
+Type=oneshot
+User=mybuild
+Group=mybuild
+WorkingDirectory=/opt/mybuild
+# 在 systemd drop-in 里补 ALERT_EMAIL / SMTP_HOST / SMTP_USER / SMTP_PASS
+# sudo systemctl edit mybuild-health.service
+EnvironmentFile=-/etc/mybuild/alert.env
+# 健康检查失败（exit 1/2）时，把详细输出通过 alert-mail.sh 发出去
+ExecStart=/bin/bash -c '/opt/mybuild/scripts/check-health.sh --quiet || /opt/mybuild/scripts/check-health.sh 2>&1 | /opt/mybuild/scripts/alert-mail.sh "[mybuild] 健康检查告警"'
+StandardOutput=journal
+StandardError=journal

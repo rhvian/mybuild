@@ -1,0 +1,12 @@
+[Unit]
+Description=mybuild — 健康检查 + 异常告警（每小时）
+Documentation=file:/opt/mybuild/DEPLOYMENT.md
+
+[Timer]
+OnCalendar=hourly
+RandomizedDelaySec=120
+Persistent=true
+Unit=mybuild-health.service
+
+[Install]
+WantedBy=timers.target

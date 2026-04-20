@@ -76,23 +76,23 @@
       <section id="overview" class="stats container">
         <article class="stat-card reveal">
           <p>覆盖省级行政区</p>
-          <h3 data-counter="34">0</h3>
+          <h3 data-counter="0" id="idx-provinces">0</h3>
           <span>含直辖市、自治区、特别行政区</span>
         </article>
         <article class="stat-card reveal delay-1">
           <p>平台备案企业</p>
-          <h3 data-counter="2487302">0</h3>
+          <h3 data-counter="0" id="idx-enterprise">0</h3>
           <span>施工、监理、勘察设计等市场主体</span>
         </article>
         <article class="stat-card reveal delay-2">
-          <p>本月风险预警</p>
-          <h3 data-counter="9842">0</h3>
-          <span>质量、安全、履约、资金风险联动</span>
+          <p>注册从业人员</p>
+          <h3 data-counter="0" id="idx-staff">0</h3>
+          <span>建造师、监理、造价等注册人员</span>
         </article>
         <article class="stat-card reveal delay-3">
-          <p>诚信评级更新</p>
-          <h3 data-counter="184320">0</h3>
-          <span>企业级和项目级信用记录同步</span>
+          <p>在库工程项目</p>
+          <h3 data-counter="0" id="idx-tender">0</h3>
+          <span>招投标、工程项目、施工许可等</span>
         </article>
       </section>
 
@@ -203,10 +203,13 @@
           <label for="keyword">企业名称 / 统一社会信用代码</label>
           <div class="input-row">
             <input id="keyword" type="text" placeholder="例如：中建某某工程有限公司 / 91310000XXXXXX" autocomplete="off" />
+            <select id="provinceFilter" aria-label="按省份筛选" style="padding:10px 14px;background:rgba(255,255,255,0.05);color:var(--text);border:1px solid rgba(255,255,255,0.12);border-radius:10px;min-width:130px">
+              <option value="">全部省份</option>
+            </select>
             <button class="btn btn-primary" type="submit">查询</button>
           </div>
           <div class="search-results" id="searchResults"></div>
-          <p class="hint">输入企业名称或统一社会信用代码进行检索，支持模糊匹配。</p>
+          <p class="hint" id="searchHint">在 <b id="searchHintCount">0</b> 家建筑企业中进行检索，支持模糊匹配。</p>
         </form>
       </section>
 

@@ -130,6 +130,22 @@ async function loadLiveData() {
     const data = await response.json();
     liveDataCache = data;
 
+    // ===== 首页统计卡片：用 stats 填充并重新动画 =====
+    const stats = data.stats || {};
+    const provCount = (stats.province_enterprise || [])
+      .filter(p => p.province_code !== "000000" && p.count > 0).length;
+    const updateCounter = (id, value) => {
+      const el = document.getElementById(id);
+      if (!el) return;
+      el.setAttribute("data-counter", String(value));
+      el.textContent = "0";
+      animateCounter(el);
+    };
+    updateCounter("idx-provinces", provCount);
+    updateCounter("idx-enterprise", stats.total_enterprise || 0);
+    updateCounter("idx-staff", stats.total_staff || 0);
+    updateCounter("idx-tender", stats.total_tender || 0);
+
     if (liveMeta) {
       liveMeta.textContent = `最新批次：${data.run_id || "-"}，更新时间：${data.updated_at || "-"}`;
     }
@@ -184,80 +200,83 @@ async function loadLiveData() {
   }
 }
 
-loadLiveData();
+loadLiveData().then(() => {
+  // 加载完数据后填充省份下拉
+  const provSelect = document.getElementById("provinceFilter");
+  if (provSelect && liveDataCache.stats && Array.isArray(liveDataCache.stats.province_enterprise)) {
+    const provs = liveDataCache.stats.province_enterprise.filter(
+      (p) => p.province_code !== "000000" && p.count > 0,
+    );
+    provSelect.innerHTML = '<option value="">全部省份</option>' +
+      provs.map((p) => `<option value="${p.province_name}">${p.province_name} (${p.count.toLocaleString()})</option>`).join("");
+  }
+  const hintCount = document.getElementById("searchHintCount");
+  if (hintCount && liveDataCache.stats) {
+    hintCount.textContent = (liveDataCache.stats.total_enterprise || 0).toLocaleString();
+  }
+});
 
 /* ===== Enterprise Search (Live Data) ===== */
 const searchForm = document.getElementById("searchForm");
 const searchResults = document.getElementById("searchResults");
 
 if (searchForm && searchResults) {
+  const doSearch = () => {
+    const keyword = document.getElementById("keyword").value.trim();
+    const provFilter = (document.getElementById("provinceFilter") || {}).value || "";
+
+    const base = liveDataCache.enterprise || [];
+    const filtered = base.filter((ent) => {
+      const provOk = !provFilter || (ent.city_name || "").includes(provFilter);
+      if (!provOk) return false;
+      if (!keyword) return true;
+      const kw = keyword.toUpperCase();
+      return (
+        (ent.name || "").includes(keyword) ||
+        (ent.uscc || "").toUpperCase().includes(kw)
+      );
+    });
+
+    if (filtered.length === 0) {
+      searchResults.innerHTML =
+        '<p style="color:var(--text-soft);padding:8px 0">未找到匹配的企业，请调整搜索关键词或筛选条件</p>';
+      return;
+    }
+
+    const shown = filtered.slice(0, 50);
+    const more = filtered.length > 50 ? `<p style="color:var(--text-soft);padding:8px 0;text-align:center">… 另外 ${(filtered.length - 50).toLocaleString()} 条未显示，请缩小搜索范围</p>` : "";
+    searchResults.innerHTML =
+      `<p style="color:var(--text-soft);padding:8px 0;font-size:0.92em">共 <b>${filtered.length.toLocaleString()}</b> 条匹配</p>` +
+      shown
+        .map(
+          (ent) => `
+          <div class="search-result-item" onclick="window.location.href='pages/enterprise.html?id=${encodeURIComponent(String(ent.id || ""))}'">
+            <div class="search-result-info">
+              <h4>${ent.name}</h4>
+              <p>${ent.uscc || "-"}</p>
+            </div>
+            <div class="search-result-score">
+              <b>${ent.status || "-"}</b>
+              <span>${ent.city_name || "-"}</span>
+            </div>
+          </div>`,
+        )
+        .join("") + more;
+  };
+
   searchForm.addEventListener("submit", (e) => {
     e.preventDefault();
-    const keyword = document.getElementById("keyword").value.trim();
-    if (!keyword) {
-      searchResults.innerHTML = '<p style="color:var(--text-soft);padding:8px 0">请输入企业名称或信用代码进行搜索</p>';
-      return;
-    }
-
-    const results = (liveDataCache.enterprise || []).filter(
-      (ent) => (ent.name || "").includes(keyword) || (ent.uscc || "").includes(keyword.toUpperCase())
-    );
-
-    if (results.length === 0) {
-      searchResults.innerHTML = '<p style="color:var(--text-soft);padding:8px 0">未找到匹配的企业，请调整搜索关键词</p>';
-      return;
-    }
-
-    searchResults.innerHTML = results
-      .map(
-        (ent) => `
-        <div class="search-result-item" onclick="window.location.href='pages/enterprise.html?id=${encodeURIComponent(String(ent.id || ""))}'">
-          <div class="search-result-info">
-            <h4>${ent.name}</h4>
-            <p>${ent.uscc || "-"}</p>
-          </div>
-          <div class="search-result-score">
-            <b>${ent.status || "-"}</b>
-            <span>${ent.city_name || "-"}</span>
-          </div>
-        </div>
-      `
-      )
-      .join("");
+    doSearch();
   });
+  const provSelect = document.getElementById("provinceFilter");
+  if (provSelect) provSelect.addEventListener("change", doSearch);
 
-  // Real-time search hint
+  // Real-time search hint — trigger doSearch with debounce
   const keywordInput = document.getElementById("keyword");
+  let searchTimer = null;
   keywordInput.addEventListener("input", () => {
-    if (keywordInput.value.trim().length > 0) {
-      const results = (liveDataCache.enterprise || []).filter(
-        (ent) =>
-          (ent.name || "").includes(keywordInput.value.trim()) ||
-          (ent.uscc || "").includes(keywordInput.value.trim().toUpperCase())
-      );
-      if (results.length > 0 && results.length <= 5) {
-        searchResults.innerHTML = results
-          .map(
-            (ent) => `
-            <div class="search-result-item" onclick="window.location.href='pages/enterprise.html?id=${encodeURIComponent(String(ent.id || ""))}'">
-              <div class="search-result-info">
-                <h4>${ent.name}</h4>
-                <p>${ent.uscc || "-"}</p>
-              </div>
-              <div class="search-result-score">
-                <b>${ent.status || "-"}</b>
-                <span>${ent.city_name || "-"}</span>
-              </div>
-            </div>
-          `
-          )
-          .join("");
-      } else {
-        searchResults.innerHTML = "";
-      }
-    } else {
-      searchResults.innerHTML = "";
-    }
+    clearTimeout(searchTimer);
+    searchTimer = setTimeout(doSearch, 200);
   });
 }
 

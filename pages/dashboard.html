@@ -46,71 +46,53 @@
 
         <section class="dash-stats">
           <article class="dash-stat-card">
-            <p>备案企业总量</p>
-            <h3 data-counter="2487302">0</h3>
-            <span>较上月 +12,847</span>
+            <p>建筑企业主体</p>
+            <h3 id="stat-enterprise">0</h3>
+            <span id="stat-enterprise-note">数据更新中</span>
           </article>
           <article class="dash-stat-card">
-            <p>AAA级企业</p>
-            <h3 data-counter="186540">0</h3>
-            <span>占比 7.5%</span>
+            <p>注册从业人员</p>
+            <h3 id="stat-staff">0</h3>
+            <span id="stat-staff-note">涵盖建造师 / 监理 / 造价等</span>
           </article>
           <article class="dash-stat-card">
-            <p>本月预警事件</p>
-            <h3 data-counter="9842">0</h3>
-            <span>较上月 -3.2%</span>
+            <p>在库项目</p>
+            <h3 id="stat-tender">0</h3>
+            <span id="stat-tender-note">招投标与工程项目</span>
           </article>
           <article class="dash-stat-card">
-            <p>失信惩戒在执</p>
-            <h3 data-counter="4216">0</h3>
-            <span>涉及 3,102 家企业</span>
+            <p>覆盖省份</p>
+            <h3 id="stat-provinces">0</h3>
+            <span id="stat-provinces-note">31 个省/自治区/直辖市</span>
           </article>
         </section>
 
         <section class="dash-charts">
           <article class="panel dash-chart">
-            <h3>省域诚信指数排行</h3>
+            <h3>各省企业数分布（Top 15）</h3>
             <div class="chart-bars" id="provinceChart">
-              <div class="chart-bar-row"><span class="chart-label">江苏</span><div class="chart-bar" style="--w:96.4%"><em>96.4</em></div></div>
-              <div class="chart-bar-row"><span class="chart-label">浙江</span><div class="chart-bar" style="--w:95.8%"><em>95.8</em></div></div>
-              <div class="chart-bar-row"><span class="chart-label">广东</span><div class="chart-bar" style="--w:95.3%"><em>95.3</em></div></div>
-              <div class="chart-bar-row"><span class="chart-label">山东</span><div class="chart-bar" style="--w:94.9%"><em>94.9</em></div></div>
-              <div class="chart-bar-row"><span class="chart-label">四川</span><div class="chart-bar" style="--w:94.2%"><em>94.2</em></div></div>
-              <div class="chart-bar-row"><span class="chart-label">湖北</span><div class="chart-bar" style="--w:93.8%"><em>93.8</em></div></div>
-              <div class="chart-bar-row"><span class="chart-label">北京</span><div class="chart-bar" style="--w:93.5%"><em>93.5</em></div></div>
-              <div class="chart-bar-row"><span class="chart-label">上海</span><div class="chart-bar" style="--w:93.1%"><em>93.1</em></div></div>
-              <div class="chart-bar-row"><span class="chart-label">福建</span><div class="chart-bar" style="--w:92.7%"><em>92.7</em></div></div>
-              <div class="chart-bar-row"><span class="chart-label">河南</span><div class="chart-bar" style="--w:92.3%"><em>92.3</em></div></div>
+              <div class="chart-bar-row"><span class="chart-label">加载中…</span><div class="chart-bar" style="--w:0%"></div></div>
             </div>
           </article>
 
           <article class="panel dash-chart">
-            <h3>风险类型分布</h3>
-            <div class="chart-bars">
-              <div class="chart-bar-row"><span class="chart-label">质量风险</span><div class="chart-bar bar-danger" style="--w:72%"><em>72%</em></div></div>
-              <div class="chart-bar-row"><span class="chart-label">安全风险</span><div class="chart-bar bar-warn" style="--w:61%"><em>61%</em></div></div>
-              <div class="chart-bar-row"><span class="chart-label">履约风险</span><div class="chart-bar bar-accent" style="--w:48%"><em>48%</em></div></div>
-              <div class="chart-bar-row"><span class="chart-label">资金风险</span><div class="chart-bar bar-info" style="--w:37%"><em>37%</em></div></div>
-              <div class="chart-bar-row"><span class="chart-label">资质风险</span><div class="chart-bar bar-info" style="--w:24%"><em>24%</em></div></div>
-              <div class="chart-bar-row"><span class="chart-label">招采异常</span><div class="chart-bar bar-info" style="--w:18%"><em>18%</em></div></div>
+            <h3>人员注册类型分布</h3>
+            <div class="chart-bars" id="staffTypeChart">
+              <div class="chart-bar-row"><span class="chart-label">加载中…</span><div class="chart-bar" style="--w:0%"></div></div>
             </div>
           </article>
         </section>
 
         <section class="dash-charts">
           <article class="panel dash-chart">
-            <h3>信用等级分布</h3>
-            <div class="grade-grid">
-              <div class="grade-item"><b>AAA</b><span>186,540</span><div class="grade-bar" style="--w:7.5%"></div></div>
-              <div class="grade-item"><b>AA</b><span>412,830</span><div class="grade-bar" style="--w:16.6%"></div></div>
-              <div class="grade-item"><b>A</b><span>623,450</span><div class="grade-bar" style="--w:25.1%"></div></div>
-              <div class="grade-item"><b>BBB</b><span>824,160</span><div class="grade-bar" style="--w:33.1%"></div></div>
-              <div class="grade-item"><b>BB及以下</b><span>440,322</span><div class="grade-bar bar-low" style="--w:17.7%"></div></div>
+            <h3>实体类型构成</h3>
+            <div class="grade-grid" id="typeGrid">
+              <div class="grade-item"><b>加载中</b><span>—</span><div class="grade-bar" style="--w:0%"></div></div>
             </div>
           </article>
 
           <article class="panel dash-chart">
-            <h3>月度预警趋势</h3>
+            <h3>近期采集趋势</h3>
             <div class="trend-chart" id="trendChart">
               <canvas id="trendCanvas" width="500" height="200"></canvas>
             </div>
@@ -119,59 +101,20 @@
 
         <section class="dash-table-section">
           <article class="panel">
-            <h3>最新监管通报</h3>
+            <h3>近期采集运行</h3>
             <table class="detail-table">
               <thead>
                 <tr>
-                  <th>通报编号</th>
-                  <th>地区</th>
-                  <th>类型</th>
-                  <th>涉及企业</th>
-                  <th>状态</th>
-                  <th>发布时间</th>
+                  <th>运行 ID</th>
+                  <th>开始</th>
+                  <th>结束</th>
+                  <th>原始记录</th>
+                  <th>标准化</th>
+                  <th>质量问题</th>
                 </tr>
               </thead>
-              <tbody>
-                <tr>
-                  <td>JG-2026-0412</td>
-                  <td>华东</td>
-                  <td>履约异常</td>
-                  <td>某某建设集团</td>
-                  <td><span class="status warn">待整改</span></td>
-                  <td>2026-04-12</td>
-                </tr>
-                <tr>
-                  <td>JG-2026-0409</td>
-                  <td>华南</td>
-                  <td>资质核验</td>
-                  <td>某某工程公司</td>
-                  <td><span class="status ok">已完成</span></td>
-                  <td>2026-04-09</td>
-                </tr>
-                <tr>
-                  <td>JG-2026-0407</td>
-                  <td>西南</td>
-                  <td>招采审计</td>
-                  <td>某某监理公司</td>
-                  <td><span class="status info">处理中</span></td>
-                  <td>2026-04-07</td>
-                </tr>
-                <tr>
-                  <td>JG-2026-0403</td>
-                  <td>华北</td>
-                  <td>安全违规</td>
-                  <td>某某施工队</td>
-                  <td><span class="status warn">待整改</span></td>
-                  <td>2026-04-03</td>
-                </tr>
-                <tr>
-                  <td>JG-2026-0328</td>
-                  <td>华中</td>
-                  <td>资金异常</td>
-                  <td>某某地产公司</td>
-                  <td><span class="status ok">已处置</span></td>
-                  <td>2026-03-28</td>
-                </tr>
+              <tbody id="runsBody">
+                <tr><td colspan="6">加载中…</td></tr>
               </tbody>
             </table>
           </article>

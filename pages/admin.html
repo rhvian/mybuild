@@ -6,6 +6,7 @@
     <title>管理后台 - 全国诚信市场建筑管理平台</title>
     <link rel="stylesheet" href="../styles/main.css" />
     <link rel="stylesheet" href="../styles/pages.css" />
+    <script src="../scripts/auth-guard.js"></script>
   </head>
   <body class="admin-body">
     <aside class="admin-sidebar">
@@ -16,6 +17,9 @@
       <nav class="sidebar-nav">
         <a href="#" class="sidebar-link active" data-section="overview">
           <span class="sidebar-icon">&#9632;</span> 工作台
+        </a>
+        <a href="#" class="sidebar-link" data-section="collect">
+          <span class="sidebar-icon">&#9881;</span> 采集控制台
         </a>
         <a href="#" class="sidebar-link" data-section="enterprises">
           <span class="sidebar-icon">&#9881;</span> 企业管理
@@ -42,44 +46,119 @@
       <header class="admin-header">
         <h1 id="adminTitle">工作台</h1>
         <div class="admin-user">
-          <span>管理员</span>
-          <a href="login.html" class="link">退出</a>
+          <span id="adminUserName">管理员</span>
+          <a href="#" class="link" onclick="cmLogout();return false;">退出</a>
         </div>
       </header>
 
       <main class="admin-content">
-        <!-- 工作台 -->
+        <!-- 工作台 / 采集监控 -->
         <section class="admin-section" id="secOverview">
           <div class="admin-stats">
             <div class="admin-stat">
-              <p>待审核企业</p>
-              <h3>23</h3>
+              <p>累计企业</p>
+              <h3 id="a-stat-enterprise">—</h3>
             </div>
             <div class="admin-stat">
-              <p>待处置预警</p>
-              <h3>156</h3>
+              <p>累计人员</p>
+              <h3 id="a-stat-staff">—</h3>
             </div>
             <div class="admin-stat">
-              <p>惩戒执行中</p>
-              <h3>4,216</h3>
+              <p>累计项目</p>
+              <h3 id="a-stat-tender">—</h3>
             </div>
             <div class="admin-stat">
-              <p>今日登录用户</p>
-              <h3>1,847</h3>
+              <p>最近 Run 状态</p>
+              <h3 id="a-stat-run">—</h3>
             </div>
           </div>
 
           <article class="panel" style="margin-top:24px">
-            <h3>最近操作记录</h3>
+            <h3>最近采集运行</h3>
             <table class="detail-table">
               <thead>
-                <tr><th>时间</th><th>操作人</th><th>操作</th><th>对象</th></tr>
+                <tr>
+                  <th>运行 ID</th>
+                  <th>开始时间</th>
+                  <th>结束时间</th>
+                  <th>原始记录</th>
+                  <th>标准化</th>
+                  <th>质量问题</th>
+                </tr>
               </thead>
-              <tbody>
-                <tr><td>2026-04-16 09:32</td><td>张管理员</td><td>审核通过</td><td>某某建设有限公司备案申请</td></tr>
-                <tr><td>2026-04-16 09:15</td><td>李管理员</td><td>预警处置</td><td>华南区域质量风险预警 #W-2026-0892</td></tr>
-                <tr><td>2026-04-16 08:48</td><td>系统</td><td>自动同步</td><td>华东区域企业信用数据更新</td></tr>
-                <tr><td>2026-04-15 17:30</td><td>王管理员</td><td>惩戒录入</td><td>某某施工队安全违规联合惩戒</td></tr>
+              <tbody id="a-runs-body">
+                <tr><td colspan="6">加载中…</td></tr>
+              </tbody>
+            </table>
+          </article>
+
+          <article class="panel" style="margin-top:24px">
+            <h3>企业数据省份分布</h3>
+            <div class="chart-bars" id="a-province-chart">
+              <div class="chart-bar-row"><span class="chart-label">加载中…</span><div class="chart-bar" style="--w:0%"></div></div>
+            </div>
+          </article>
+        </section>
+
+        <!-- 采集控制台 -->
+        <section class="admin-section hidden" id="secCollect">
+          <div class="collect-grid">
+            <article class="panel collect-status-panel">
+              <div class="collect-status-head">
+                <h3>运行状态</h3>
+                <span class="collect-dot" id="cc-dot"></span>
+                <span id="cc-state-label" class="collect-state">加载中…</span>
+              </div>
+              <ul class="collect-stats">
+                <li><span>PID</span><strong id="cc-pid">—</strong></li>
+                <li><span>运行时长</span><strong id="cc-elapsed">—</strong></li>
+                <li><span>最近 Run</span><strong id="cc-run">—</strong></li>
+                <li><span>累计标准化</span><strong id="cc-norm">—</strong></li>
+              </ul>
+              <div class="collect-actions">
+                <button class="btn btn-primary" data-cc-start="all">启动·全部</button>
+                <button class="btn btn-secondary" data-cc-start="enterprise">仅企业</button>
+                <button class="btn btn-secondary" data-cc-start="staff">仅人员反查</button>
+                <button class="btn btn-secondary" data-cc-start="project">仅项目反查</button>
+                <button class="btn btn-danger" id="cc-stop">停止</button>
+                <button class="btn btn-ghost" id="cc-refresh">刷新</button>
+              </div>
+              <p class="hint muted" id="cc-feedback">提示：启动后请留在本页观察日志；任何时候都可以"停止"安全结束（已采数据不丢）。</p>
+            </article>
+
+            <article class="panel collect-health-panel">
+              <div class="collect-status-head">
+                <h3>健康检查</h3>
+                <span id="cc-health-badge" class="badge-health">—</span>
+                <button class="btn btn-ghost btn-sm" id="cc-health-refresh">运行</button>
+              </div>
+              <ul class="collect-health-list" id="cc-health-list">
+                <li class="muted">点击"运行"查看健康状态</li>
+              </ul>
+            </article>
+          </div>
+
+          <article class="panel collect-log-panel">
+            <div class="collect-log-head">
+              <h3>实时日志</h3>
+              <span id="cc-log-file" class="muted-inline"></span>
+              <label class="collect-follow-label">
+                <input type="checkbox" id="cc-follow" checked /> 自动滚底
+              </label>
+            </div>
+            <pre class="collect-log" id="cc-log">（尚无日志）</pre>
+          </article>
+
+          <article class="panel">
+            <h3>最近采集运行</h3>
+            <table class="detail-table">
+              <thead>
+                <tr>
+                  <th>运行 ID</th><th>开始</th><th>结束</th><th>原始</th><th>标准化</th><th>问题</th><th>失败源</th>
+                </tr>
+              </thead>
+              <tbody id="cc-runs-body">
+                <tr><td colspan="7" class="muted">加载中…</td></tr>
               </tbody>
             </table>
           </article>
@@ -88,186 +167,104 @@
         <!-- 企业管理 -->
         <section class="admin-section hidden" id="secEnterprises">
           <div class="admin-toolbar">
-            <input type="text" placeholder="搜索企业名称或信用代码..." class="admin-search" />
-            <button class="btn btn-primary">+ 新增企业</button>
+            <input type="text" id="a-ent-search" placeholder="搜索企业名称或信用代码..." class="admin-search" />
+            <select id="a-ent-prov" class="admin-select" aria-label="省份">
+              <option value="">全部省份</option>
+            </select>
           </div>
           <article class="panel">
+            <p class="hint" id="a-ent-hint" style="padding:4px 0 12px">加载中…</p>
             <table class="detail-table">
               <thead>
-                <tr><th>企业名称</th><th>信用代码</th><th>信用等级</th><th>状态</th><th>操作</th></tr>
+                <tr><th>企业名称</th><th>信用代码</th><th>法定代表人</th><th>地区</th><th>状态</th><th>操作</th></tr>
               </thead>
-              <tbody>
-                <tr>
-                  <td>中建某某工程有限公司</td>
-                  <td>91310000MA1FL8X72K</td>
-                  <td>AAA</td>
-                  <td><span class="status ok">已备案</span></td>
-                  <td><a href="enterprise.html" class="link">查看</a></td>
-                </tr>
-                <tr>
-                  <td>某某建设集团有限公司</td>
-                  <td>91440300MA5FW2J31R</td>
-                  <td>AA</td>
-                  <td><span class="status ok">已备案</span></td>
-                  <td><a href="enterprise.html" class="link">查看</a></td>
-                </tr>
-                <tr>
-                  <td>某某工程监理有限公司</td>
-                  <td>91510100MA6CW7H54T</td>
-                  <td>A</td>
-                  <td><span class="status warn">待审核</span></td>
-                  <td><a href="#" class="link">审核</a></td>
-                </tr>
+              <tbody id="a-ent-body">
+                <tr><td colspan="6">加载中…</td></tr>
               </tbody>
             </table>
+            <div style="margin-top:12px;text-align:center">
+              <button class="btn" id="a-ent-prev">上一页</button>
+              <span id="a-ent-page" style="margin:0 14px">第 1 页</span>
+              <button class="btn" id="a-ent-next">下一页</button>
+            </div>
           </article>
         </section>
 
-        <!-- 预警处置 -->
+        <!-- 预警处置（建设中） -->
         <section class="admin-section hidden" id="secWarnings">
-          <div class="admin-toolbar">
-            <select class="admin-select">
-              <option>全部预警</option>
-              <option>质量风险</option>
-              <option>安全风险</option>
-              <option>履约风险</option>
-              <option>资金风险</option>
-            </select>
-            <select class="admin-select">
-              <option>全部状态</option>
-              <option>待处置</option>
-              <option>处理中</option>
-              <option>已处置</option>
-            </select>
-          </div>
-          <article class="panel">
-            <table class="detail-table">
-              <thead>
-                <tr><th>预警编号</th><th>类型</th><th>地区</th><th>涉及企业</th><th>等级</th><th>状态</th><th>操作</th></tr>
-              </thead>
-              <tbody>
-                <tr>
-                  <td>W-2026-0892</td>
-                  <td>质量风险</td>
-                  <td>华南</td>
-                  <td>某某建设集团</td>
-                  <td><span class="status warn">高</span></td>
-                  <td>待处置</td>
-                  <td><a href="#" class="link">处置</a></td>
-                </tr>
-                <tr>
-                  <td>W-2026-0887</td>
-                  <td>履约风险</td>
-                  <td>华东</td>
-                  <td>某某工程公司</td>
-                  <td><span class="status info">中</span></td>
-                  <td>处理中</td>
-                  <td><a href="#" class="link">查看</a></td>
-                </tr>
-                <tr>
-                  <td>W-2026-0881</td>
-                  <td>安全风险</td>
-                  <td>华北</td>
-                  <td>某某施工队</td>
-                  <td><span class="status warn">高</span></td>
-                  <td>待处置</td>
-                  <td><a href="#" class="link">处置</a></td>
-                </tr>
-              </tbody>
-            </table>
+          <article class="panel placeholder-panel">
+            <div class="placeholder-head">
+              <h3>预警处置 · 建设中</h3>
+              <span class="badge-wip">v1.0 规划</span>
+            </div>
+            <p class="hint">
+              该模块在 L2 阶段启用，用于把"质量 / 履约 / 安全 / 资金"四类风险点从数据层自动生成工单，并走派单→审批→反馈→关闭闭环。
+            </p>
+            <ul class="feature-list">
+              <li>规则引擎：基于 <code>quality_issue</code> + 外部告警源生成 <code>alerts</code></li>
+              <li>工单表：派单 / 审批 / 备注 / 附件 / 关闭原因</li>
+              <li>角色权限：审核员处置、管理员复核</li>
+              <li>看板：按地区 / 类型 / 等级聚合</li>
+            </ul>
+            <p class="hint muted">当前 v0.3 为数据采集演示版，业务闭环未开放。</p>
           </article>
         </section>
 
-        <!-- 惩戒管理 -->
+        <!-- 惩戒管理（建设中） -->
         <section class="admin-section hidden" id="secPenalties">
-          <article class="panel">
-            <h3>联合惩戒执行情况</h3>
-            <table class="detail-table">
-              <thead>
-                <tr><th>惩戒编号</th><th>企业</th><th>惩戒措施</th><th>执行部门</th><th>起始日期</th><th>状态</th></tr>
-              </thead>
-              <tbody>
-                <tr>
-                  <td>CJ-2026-0342</td>
-                  <td>某某施工队</td>
-                  <td>限制招投标</td>
-                  <td>住建部</td>
-                  <td>2026-03-15</td>
-                  <td><span class="status warn">执行中</span></td>
-                </tr>
-                <tr>
-                  <td>CJ-2026-0318</td>
-                  <td>某某地产公司</td>
-                  <td>重点监管</td>
-                  <td>市场监管总局</td>
-                  <td>2026-03-01</td>
-                  <td><span class="status warn">执行中</span></td>
-                </tr>
-              </tbody>
-            </table>
+          <article class="panel placeholder-panel">
+            <div class="placeholder-head">
+              <h3>联合惩戒管理 · 建设中</h3>
+              <span class="badge-wip">v1.0 规划</span>
+            </div>
+            <p class="hint">
+              接入住建部 + 市场监管总局失信联合惩戒名录后上线，支持"限制招投标 / 重点监管 / 列入黑名单"的执行跟踪。
+            </p>
+            <ul class="feature-list">
+              <li>数据源：信用中国 + 四库一平台诚信记录 + 省级黑名单</li>
+              <li><code>credit</code> 实体类型：红黑名单时效 / 执行部门 / 解除条件</li>
+              <li>跨部门协同：任务下发、回执、异议申诉</li>
+            </ul>
+            <p class="hint muted">依赖数据主线 A4（黑名单接入）和编码主线 B5b（工单闭环）。</p>
           </article>
         </section>
 
-        <!-- 项目监管 -->
+        <!-- 项目监管（建设中） -->
         <section class="admin-section hidden" id="secProjects">
-          <article class="panel">
-            <h3>重点监管项目</h3>
-            <table class="detail-table">
-              <thead>
-                <tr><th>项目名称</th><th>地区</th><th>承建企业</th><th>合同额(万元)</th><th>监管状态</th></tr>
-              </thead>
-              <tbody>
-                <tr>
-                  <td>某某城际铁路枢纽工程</td>
-                  <td>江苏</td>
-                  <td>中建某某工程有限公司</td>
-                  <td>256,000</td>
-                  <td><span class="status info">重点监管</span></td>
-                </tr>
-                <tr>
-                  <td>某某新区综合商务中心</td>
-                  <td>上海</td>
-                  <td>某某建设集团</td>
-                  <td>128,000</td>
-                  <td><span class="status ok">常规监管</span></td>
-                </tr>
-              </tbody>
-            </table>
+          <article class="panel placeholder-panel">
+            <div class="placeholder-head">
+              <h3>项目监管 · 建设中</h3>
+              <span class="badge-wip">v1.0 规划</span>
+            </div>
+            <p class="hint">
+              采集到招投标完整数据（公告 / 中标 / 履约）后上线，针对重大工程做全周期留痕和监管分级。
+            </p>
+            <ul class="feature-list">
+              <li>数据依赖：<code>tender</code> 数据深度从列表层升到招标+中标+履约</li>
+              <li>重点项目标记：合同额 / 层级 / 风险等级</li>
+              <li>监管日志：进度报送、质量抽检、争议处置</li>
+            </ul>
+            <p class="hint muted">依赖数据主线 A5（招投标完整接入）。</p>
           </article>
         </section>
 
-        <!-- 用户管理 -->
+        <!-- 用户管理（建设中） -->
         <section class="admin-section hidden" id="secUsers">
-          <article class="panel">
-            <h3>平台用户列表</h3>
-            <table class="detail-table">
-              <thead>
-                <tr><th>用户名</th><th>所属单位</th><th>角色</th><th>最后登录</th><th>状态</th></tr>
-              </thead>
-              <tbody>
-                <tr>
-                  <td>zhangadmin</td>
-                  <td>平台管理中心</td>
-                  <td>超级管理员</td>
-                  <td>2026-04-16 09:32</td>
-                  <td><span class="status ok">正常</span></td>
-                </tr>
-                <tr>
-                  <td>lichecker</td>
-                  <td>华东区域办</td>
-                  <td>审核员</td>
-                  <td>2026-04-16 09:15</td>
-                  <td><span class="status ok">正常</span></td>
-                </tr>
-                <tr>
-                  <td>wangreviewer</td>
-                  <td>华南区域办</td>
-                  <td>审核员</td>
-                  <td>2026-04-15 17:30</td>
-                  <td><span class="status ok">正常</span></td>
-                </tr>
-              </tbody>
-            </table>
+          <article class="panel placeholder-panel">
+            <div class="placeholder-head">
+              <h3>用户与权限 · 建设中</h3>
+              <span class="badge-wip">v1.0 规划</span>
+            </div>
+            <p class="hint">
+              真实用户体系在 L2 阶段随 FastAPI + JWT 后端同步上线，5 级角色：游客 / 招商 / 政务 / 审核员 / 管理员。
+            </p>
+            <ul class="feature-list">
+              <li>表结构：<code>users</code> / <code>roles</code> / <code>permissions</code> / <code>role_permissions</code></li>
+              <li>认证：bcrypt + JWT（15min access + 7d refresh），登录失败限流</li>
+              <li>RBAC 中间件：<code>require_role</code> / <code>require_permission</code></li>
+              <li>审计：所有写操作落 <code>audit_log</code> 表</li>
+            </ul>
+            <p class="hint muted">当前登录仅为前端口令校验，无后端 session。</p>
           </article>
         </section>
       </main>
@@ -275,5 +272,6 @@
 
     <script src="../scripts/main.js"></script>
     <script src="../scripts/admin.js"></script>
+    <script src="../scripts/admin-control.js"></script>
   </body>
 </html>

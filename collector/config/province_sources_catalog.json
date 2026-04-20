@@ -309,17 +309,17 @@
   },
   {
     "province": "广西",
-    "url": "https://gxjzsc.gxcic.net/",
+    "url": "http://gxjzsc.gxcic.net/",
     "source_id": "prov_19",
     "source_level": "B",
     "source_type": "province_portal_index",
     "enabled": true,
-    "health_status": "ERROR",
-    "http_code": null,
-    "resolved_url": "https://gxjzsc.gxcic.net/",
-    "title": "",
-    "last_error": "<urlopen error [SSL: UNSAFE_LEGACY_RENEGOTIATION_DISABLED] unsafe legacy renegotiation disabled (_ssl.c:1000)>",
-    "priority": 3
+    "health_status": "OK",
+    "http_code": 200,
+    "resolved_url": "http://gxjzsc.gxcic.net/",
+    "title": "广西建筑市场监管云平台|桂建云",
+    "last_error": "",
+    "priority": 1
   },
   {
     "province": "江苏",
@@ -337,17 +337,17 @@
   },
   {
     "province": "海南",
-    "url": "http://www.hizj.net:8008/PublishWeb/Default.aspx",
+    "url": "https://zjt.hainan.gov.cn/",
     "source_id": "prov_20",
     "source_level": "B",
     "source_type": "province_portal_index",
     "enabled": true,
-    "health_status": "ERROR",
-    "http_code": null,
-    "resolved_url": "http://www.hizj.net:8008/PublishWeb/Default.aspx",
-    "title": "",
-    "last_error": "HTTP Error 404: Not Found",
-    "priority": 3
+    "health_status": "OK",
+    "http_code": 200,
+    "resolved_url": "https://zjt.hainan.gov.cn/",
+    "title": "海南省住房和城乡建设厅",
+    "last_error": "",
+    "priority": 2
   },
   {
     "province": "湖北",
@@ -393,17 +393,17 @@
   },
   {
     "province": "陕西",
-    "url": "http://jzscyth.shaanxi.gov.cn:7001/PDR/network/credit/home",
+    "url": "http://js.shaanxi.gov.cn/",
     "source_id": "prov_26",
     "source_level": "B",
     "source_type": "province_portal_index",
     "enabled": true,
-    "health_status": "ERROR",
-    "http_code": null,
-    "resolved_url": "http://jzscyth.shaanxi.gov.cn:7001/PDR/network/credit/home",
-    "title": "",
-    "last_error": "timed out",
-    "priority": 3
+    "health_status": "OK",
+    "http_code": 200,
+    "resolved_url": "http://js.shaanxi.gov.cn/",
+    "title": "陕西省住房和城乡建设厅",
+    "last_error": "",
+    "priority": 2
   },
   {
     "province": "黑龙江",

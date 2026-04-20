@@ -8,6 +8,8 @@ from typing import Any, Dict
 
 
 USCC_REGEX = re.compile(r"^[0-9A-Z]{18}$")
+# 老的组织机构代码：9 位（8 位代码 + 1 位校验位），允许数字和字母（可能含 "-"）
+ORG_CODE_REGEX = re.compile(r"^[0-9A-Z]{8,9}[0-9A-Z]?$")
 CITY_CODE_REGEX = re.compile(r"^\d{6}$")
 
 
@@ -23,7 +25,8 @@ def normalize_uscc(uscc: str | None) -> str:
 
 
 def is_valid_uscc(uscc: str) -> bool:
-    return bool(USCC_REGEX.match(uscc))
+    # 接受 18 位 USCC，或 8-10 位老组织机构代码（过渡期大量企业仍使用）。
+    return bool(USCC_REGEX.match(uscc) or ORG_CODE_REGEX.match(uscc))
 
 
 def is_valid_city_code(code: str) -> bool:

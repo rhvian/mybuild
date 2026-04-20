@@ -1,0 +1,30 @@
+[Unit]
+Description=mybuild — 控制服务器（静态前端 + /api 采集控制）
+Documentation=file:/opt/mybuild/DEPLOYMENT.md
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=mybuild
+Group=mybuild
+WorkingDirectory=/opt/mybuild
+Environment=HOST=127.0.0.1
+Environment=PORT=8787
+# 与 mybuild-collect.service 共用虚拟环境 / 系统 python
+ExecStart=/usr/bin/python3 -u -m collector.control_server
+# 正常关停：SIGTERM → 15s 优雅 → SIGKILL 兜底
+KillSignal=SIGTERM
+TimeoutStopSec=15
+Restart=on-failure
+RestartSec=5
+# 日志
+StandardOutput=journal
+StandardError=journal
+
+# 资源限制
+LimitNOFILE=8192
+MemoryMax=512M
+
+[Install]
+WantedBy=multi-user.target

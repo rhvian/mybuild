@@ -1,0 +1,13 @@
+[Unit]
+Description=mybuild — 每日采集定时（凌晨 2:00）
+Documentation=file:/opt/mybuild/DEPLOYMENT.md
+
+[Timer]
+# 每天 02:00 本机时区，若上一次未运行完则等待
+OnCalendar=*-*-* 02:00:00
+Persistent=true
+RandomizedDelaySec=600
+Unit=mybuild-collect.service
+
+[Install]
+WantedBy=timers.target

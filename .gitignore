@@ -3,3 +3,13 @@ __pycache__/
 collector/data/collector.db
 collector/data/collector.db-shm
 collector/data/collector.db-wal
+
+# 运行态（不入库）
+collector/data/*.pid
+collector/data/control_allowed_hashes.txt
+collector/logs/
+
+# 开发临时文件
+log.txt
+*.swp
+.DS_Store

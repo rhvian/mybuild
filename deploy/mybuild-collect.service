@@ -1,0 +1,28 @@
+[Unit]
+Description=mybuild — 全国诚信市场建筑管理平台 · 采集 oneshot
+Documentation=file:/opt/mybuild/DEPLOYMENT.md
+After=network-online.target
+Wants=network-online.target
+# 避免和长驻 server 冲突
+ConditionPathExists=/opt/mybuild/scripts/collect.sh
+
+[Service]
+Type=oneshot
+User=mybuild
+Group=mybuild
+WorkingDirectory=/opt/mybuild
+Environment=PYTHON=/usr/bin/python3
+# --no-init：init-db 只需跑一次；新增 source 时手动 systemctl stop timer + init-db + start timer
+ExecStart=/bin/bash /opt/mybuild/scripts/collect.sh --no-init
+# 超时硬上限 6 小时（含 staff_by_company 长反查）
+TimeoutStartSec=21600
+# 日志到 journald，按服务名分桶：journalctl -u mybuild-collect -f
+StandardOutput=journal
+StandardError=journal
+
+# 资源限制（Playwright chromium 需要）
+LimitNOFILE=65535
+MemoryMax=3G
+
+[Install]
+WantedBy=multi-user.target
