@@ -46,7 +46,7 @@
       <div class="admin-banner" id="adminBanner">
         <span class="admin-banner-icon">&#9432;</span>
         <span class="admin-banner-text">
-          <strong>v0.4 · L2</strong> · 预警处置 + 用户权限已对接 FastAPI 真实业务流；惩戒 / 项目监管 2 项待数据源。
+          <strong>v0.4 · L2</strong> · admin 后台全部 7 个 tab 已接真实 FastAPI 业务流。预警 / 申诉 / 项目监管 / 用户权限数据落 <code>operation.db</code>。
         </span>
         <button class="admin-banner-close" aria-label="关闭" onclick="document.getElementById('adminBanner').style.display='none';">&times;</button>
       </div>
@@ -342,41 +342,252 @@
           </article>
         </section>
 
-        <!-- 惩戒管理（建设中） -->
+        <!-- 联合惩戒 · 申诉审核（v0.4 真实业务）-->
         <section class="admin-section hidden" id="secPenalties">
-          <article class="panel placeholder-panel">
-            <div class="placeholder-head">
-              <h3>联合惩戒管理 · 建设中</h3>
-              <span class="badge-wip">v1.0 规划</span>
+          <article class="panel">
+            <div class="collect-status-head">
+              <h3>申诉审核（对联合惩戒 / 信用评价 / 资质裁定）</h3>
+              <span id="ap-count" class="muted-inline"></span>
+              <button class="btn btn-ghost btn-sm" id="ap-refresh">刷新</button>
+              <button class="btn btn-primary btn-sm" id="ap-new">代企业提交申诉</button>
             </div>
-            <p class="hint">
-              接入住建部 + 市场监管总局失信联合惩戒名录后上线，支持"限制招投标 / 重点监管 / 列入黑名单"的执行跟踪。
-            </p>
-            <ul class="feature-list">
-              <li>数据源：信用中国 + 四库一平台诚信记录 + 省级黑名单</li>
-              <li><code>credit</code> 实体类型：红黑名单时效 / 执行部门 / 解除条件</li>
-              <li>跨部门协同：任务下发、回执、异议申诉</li>
-            </ul>
-            <p class="hint muted">依赖数据主线 A4（黑名单接入）和编码主线 B5b（工单闭环）。</p>
+            <div class="admin-toolbar" style="padding:8px 0 12px">
+              <select id="ap-f-status" class="admin-select">
+                <option value="">全部状态</option>
+                <option value="submitted">已提交 submitted</option>
+                <option value="under_review">审核中 under_review</option>
+                <option value="need_more">待补材料 need_more</option>
+                <option value="approved">已通过 approved</option>
+                <option value="rejected">已驳回 rejected</option>
+              </select>
+              <select id="ap-f-category" class="admin-select">
+                <option value="">全部类别</option>
+                <option value="credit">信用评价 credit</option>
+                <option value="qualification">资质裁定 qualification</option>
+                <option value="blacklist">黑名单 blacklist</option>
+                <option value="other">其他 other</option>
+              </select>
+              <input id="ap-f-q" class="admin-search" type="text" placeholder="搜索企业名 / 标题 / USCC..." />
+            </div>
+            <table class="detail-table">
+              <thead>
+                <tr>
+                  <th>ID</th><th>企业</th><th>类别</th><th>标题</th><th>状态</th><th>审核人</th><th>提交时间</th><th>操作</th>
+                </tr>
+              </thead>
+              <tbody id="ap-body"><tr><td colspan="8" class="muted">加载中…</td></tr></tbody>
+            </table>
+            <div style="margin-top:12px;text-align:center">
+              <button class="btn btn-ghost" id="ap-prev">上一页</button>
+              <span id="ap-page" style="margin:0 14px">第 1 页</span>
+              <button class="btn btn-ghost" id="ap-next">下一页</button>
+            </div>
+          </article>
+
+          <!-- 详情 + 审核面板 -->
+          <article class="panel hidden" id="ap-detail-panel" style="margin-top:18px">
+            <div class="collect-status-head">
+              <h3>申诉详情 <span id="ap-d-id" class="muted-inline"></span></h3>
+              <button class="btn btn-ghost btn-sm" id="ap-d-close">关闭</button>
+            </div>
+            <div id="ap-d-body"></div>
+            <div style="border-top:1px solid var(--line);margin-top:14px;padding-top:14px">
+              <h4 style="margin:0 0 10px">审核操作</h4>
+              <div class="form-group">
+                <textarea id="ap-d-note" rows="3" placeholder="审核意见（批准理由 / 驳回原因 / 补材料要求）"
+                  style="width:100%;padding:8px 10px;border:1px solid var(--line);border-radius:4px;background:rgba(0,0,0,0.15);color:#eee;font-family:inherit;font-size:13px;"></textarea>
+              </div>
+              <div class="collect-actions" id="ap-d-actions"></div>
+            </div>
+          </article>
+
+          <!-- 代企业提交（测试入口）-->
+          <article class="panel hidden" id="ap-new-panel" style="margin-top:18px">
+            <div class="collect-status-head">
+              <h3>代企业提交申诉</h3>
+              <button class="btn btn-ghost btn-sm" id="ap-new-close">关闭</button>
+            </div>
+            <form id="ap-new-form">
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+                <div class="form-group">
+                  <label>企业 USCC / key *</label>
+                  <input id="ap-n-key" type="text" required maxlength="64" class="admin-search" style="width:100%" placeholder="91310000...">
+                </div>
+                <div class="form-group">
+                  <label>企业名称 *</label>
+                  <input id="ap-n-name" type="text" required maxlength="256" class="admin-search" style="width:100%">
+                </div>
+              </div>
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+                <div class="form-group">
+                  <label>申诉类别</label>
+                  <select id="ap-n-category" class="admin-select" style="width:100%">
+                    <option value="credit">信用评价 credit</option>
+                    <option value="qualification">资质裁定 qualification</option>
+                    <option value="blacklist">黑名单 blacklist</option>
+                    <option value="other">其他 other</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label>证据链接（可选）</label>
+                  <input id="ap-n-evidence" type="url" class="admin-search" style="width:100%" placeholder="https://...">
+                </div>
+              </div>
+              <div class="form-group">
+                <label>标题 *</label>
+                <input id="ap-n-title" type="text" required maxlength="256" class="admin-search" style="width:100%">
+              </div>
+              <div class="form-group">
+                <label>申诉详情</label>
+                <textarea id="ap-n-detail" rows="5" style="width:100%;padding:8px 10px;border:1px solid var(--line);border-radius:4px;background:rgba(0,0,0,0.15);color:#eee;font-family:inherit;font-size:13px;"></textarea>
+              </div>
+              <div class="collect-actions">
+                <button class="btn btn-primary" type="submit">提交</button>
+                <button class="btn btn-ghost" type="button" id="ap-new-reset">重置</button>
+              </div>
+              <p class="hint muted" id="ap-new-feedback"></p>
+            </form>
           </article>
         </section>
 
-        <!-- 项目监管（建设中） -->
+        <!-- 项目监管（v0.4 真实业务）-->
         <section class="admin-section hidden" id="secProjects">
-          <article class="panel placeholder-panel">
-            <div class="placeholder-head">
-              <h3>项目监管 · 建设中</h3>
-              <span class="badge-wip">v1.0 规划</span>
+          <article class="panel">
+            <div class="collect-status-head">
+              <h3>项目监管</h3>
+              <span id="pm-count" class="muted-inline"></span>
+              <button class="btn btn-ghost btn-sm" id="pm-refresh">刷新</button>
+              <button class="btn btn-primary btn-sm" id="pm-new">新增监管项目</button>
             </div>
-            <p class="hint">
-              采集到招投标完整数据（公告 / 中标 / 履约）后上线，针对重大工程做全周期留痕和监管分级。
-            </p>
-            <ul class="feature-list">
-              <li>数据依赖：<code>tender</code> 数据深度从列表层升到招标+中标+履约</li>
-              <li>重点项目标记：合同额 / 层级 / 风险等级</li>
-              <li>监管日志：进度报送、质量抽检、争议处置</li>
-            </ul>
-            <p class="hint muted">依赖数据主线 A5（招投标完整接入）。</p>
+            <div class="admin-toolbar" style="padding:8px 0 12px">
+              <select id="pm-f-risk" class="admin-select">
+                <option value="">全部风险</option>
+                <option value="high">高 high</option>
+                <option value="medium">中 medium</option>
+                <option value="low">低 low</option>
+                <option value="normal">正常 normal</option>
+              </select>
+              <select id="pm-f-sup" class="admin-select">
+                <option value="">全部等级</option>
+                <option value="priority">重点 priority</option>
+                <option value="key">关键 key</option>
+                <option value="routine">常规 routine</option>
+              </select>
+              <select id="pm-f-status" class="admin-select">
+                <option value="">全部状态</option>
+                <option value="active">在管 active</option>
+                <option value="suspended">已暂停 suspended</option>
+                <option value="closed">已结案 closed</option>
+              </select>
+              <input id="pm-f-q" class="admin-search" type="text" placeholder="搜索项目名 / 编号 / 承建方..." />
+            </div>
+            <table class="detail-table">
+              <thead>
+                <tr>
+                  <th>ID</th><th>项目名称</th><th>承建方</th><th>风险</th><th>监管等级</th><th>状态</th><th>巡检</th><th>操作</th>
+                </tr>
+              </thead>
+              <tbody id="pm-body"><tr><td colspan="8" class="muted">加载中…</td></tr></tbody>
+            </table>
+            <div style="margin-top:12px;text-align:center">
+              <button class="btn btn-ghost" id="pm-prev">上一页</button>
+              <span id="pm-page" style="margin:0 14px">第 1 页</span>
+              <button class="btn btn-ghost" id="pm-next">下一页</button>
+            </div>
+          </article>
+
+          <!-- 项目详情 / 编辑 -->
+          <article class="panel hidden" id="pm-detail-panel" style="margin-top:18px">
+            <div class="collect-status-head">
+              <h3>项目监管 <span id="pm-d-id" class="muted-inline"></span></h3>
+              <button class="btn btn-ghost btn-sm" id="pm-d-close">关闭</button>
+            </div>
+            <div id="pm-d-body"></div>
+            <div style="border-top:1px solid var(--line);margin-top:14px;padding-top:14px">
+              <h4 style="margin:0 0 10px">调整监管等级</h4>
+              <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px">
+                <div class="form-group">
+                  <label>风险</label>
+                  <select id="pm-e-risk" class="admin-select" style="width:100%">
+                    <option value="high">高</option>
+                    <option value="medium">中</option>
+                    <option value="low">低</option>
+                    <option value="normal">正常</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label>监管等级</label>
+                  <select id="pm-e-sup" class="admin-select" style="width:100%">
+                    <option value="priority">重点</option>
+                    <option value="key">关键</option>
+                    <option value="routine">常规</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label>状态</label>
+                  <select id="pm-e-status" class="admin-select" style="width:100%">
+                    <option value="active">在管</option>
+                    <option value="suspended">暂停</option>
+                    <option value="closed">结案</option>
+                  </select>
+                </div>
+              </div>
+              <div class="collect-actions">
+                <button class="btn btn-primary btn-sm" id="pm-e-save">保存调整</button>
+              </div>
+            </div>
+            <div style="border-top:1px solid var(--line);margin-top:14px;padding-top:14px">
+              <h4 style="margin:0 0 10px">新增巡检</h4>
+              <div class="form-group">
+                <textarea id="pm-i-note" rows="3" placeholder="巡检情况：到场时间 / 检查项 / 发现问题 / 整改要求..."
+                  style="width:100%;padding:8px 10px;border:1px solid var(--line);border-radius:4px;background:rgba(0,0,0,0.15);color:#eee;font-family:inherit;font-size:13px;"></textarea>
+              </div>
+              <div class="collect-actions">
+                <button class="btn btn-primary btn-sm" id="pm-i-submit">登记巡检</button>
+              </div>
+            </div>
+          </article>
+
+          <!-- 新增监管 -->
+          <article class="panel hidden" id="pm-new-panel" style="margin-top:18px">
+            <div class="collect-status-head">
+              <h3>新增监管项目</h3>
+              <button class="btn btn-ghost btn-sm" id="pm-new-close">关闭</button>
+            </div>
+            <form id="pm-new-form">
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+                <div class="form-group">
+                  <label>项目编号 / key *</label>
+                  <input id="pm-n-key" type="text" required maxlength="64" class="admin-search" style="width:100%" placeholder="PRJ-2026-...">
+                </div>
+                <div class="form-group">
+                  <label>项目名称 *</label>
+                  <input id="pm-n-name" type="text" required maxlength="256" class="admin-search" style="width:100%">
+                </div>
+              </div>
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+                <div class="form-group">
+                  <label>承建方</label>
+                  <input id="pm-n-builder" type="text" maxlength="256" class="admin-search" style="width:100%">
+                </div>
+                <div class="form-group">
+                  <label>风险 / 监管等级</label>
+                  <div style="display:flex;gap:8px">
+                    <select id="pm-n-risk" class="admin-select" style="flex:1">
+                      <option value="normal">正常</option><option value="low">低</option><option value="medium">中</option><option value="high">高</option>
+                    </select>
+                    <select id="pm-n-sup" class="admin-select" style="flex:1">
+                      <option value="routine">常规</option><option value="key">关键</option><option value="priority">重点</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+              <div class="collect-actions">
+                <button class="btn btn-primary" type="submit">创建</button>
+                <button class="btn btn-ghost" type="button" id="pm-new-reset">重置</button>
+              </div>
+              <p class="hint muted" id="pm-new-feedback"></p>
+            </form>
           </article>
         </section>
 
@@ -464,5 +675,7 @@
     <script src="../scripts/admin-control.js"></script>
     <script src="../scripts/admin-alerts.js"></script>
     <script src="../scripts/admin-users.js"></script>
+    <script src="../scripts/admin-appeals.js"></script>
+    <script src="../scripts/admin-projects.js"></script>
   </body>
 </html>
