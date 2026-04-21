@@ -186,6 +186,18 @@ sudo systemctl restart mybuild-server.service  # 改配置后重启
 
 `deploy/install.sh` 整合上面所有步骤（创建用户 + Playwright + init-db + systemd + nginx），先看清注释再跑。
 
+### 4.4 部署后验证
+
+`scripts/verify-deploy.sh` — 一键体检 L1 控制 + L2 后端 + systemd timer + 关键文件 + nginx 配置 + 采集健康度。read-only，不动任何状态。
+
+```bash
+bash scripts/verify-deploy.sh                   # 人类可读，全量检查
+bash scripts/verify-deploy.sh --quiet           # 只有异常输出（cron 友好）
+bash scripts/verify-deploy.sh --api-host 127.0.0.1:8000 --control-host 127.0.0.1:8787
+```
+
+退出码：0 全绿 / 1 可选组件 WARN / 2 CRITICAL（无法对外服务）。建议部署完立即跑一次，之后挂进 cron 或 `mybuild-health.timer`。
+
 ---
 
 ## 五、采集策略（重要）
