@@ -1,83 +1,86 @@
 # 全国诚信市场建筑管理平台
 
-当前仓库包含两部分：
+建筑市场公开数据采集 + 审查处置一体化平台。
 
-1. 静态前端门户（展示页面）
-2. 采集中台骨架（数据源注册、采集、标准化、质检、入库）
-
-## 目录结构
-
-```text
-.
-├── index.html
-├── pages/
-├── scripts/
-├── styles/
-└── collector/
+```
+采集中台（collector）   →   SQLite / REST API   →   公众前台 + 管理后台
+ 国家平台 + 省级平台         按实体归一化               检索 / 看板 / 预警 / 申诉
 ```
 
-## 本地查看
-
-直接在浏览器打开 `index.html` 即可，或使用任意静态服务器运行。
-
-例如：
+## 快速试用（本地 1 条命令）
 
 ```bash
-python3 -m http.server 8080
+bash scripts/start-server.sh
+# 浏览器打开 http://127.0.0.1:8787
+# 管理后台入口 http://127.0.0.1:8787/pages/login.html
+# 默认凭据：admin@example.com / build2026
 ```
 
-然后访问：
+完整使用说明见 [USAGE.md](USAGE.md)。
 
-```text
-http://localhost:8080
+## 能力全景
+
+| 层 | 模块 | 状态 |
+|----|------|------|
+| 采集 | 国家平台 jzsc.mohurd（企业 / 人员 / 项目）| ✅ 14k + 38k + 500 条 |
+| 采集 | 浙江省住建（企业 / 人员，免登明文）| ✅ connector 就绪 |
+| 采集 | 省级平台批量接入 | ⏸ 按需（见 [HAR_CAPTURE.md](HAR_CAPTURE.md)，需抓 HAR）|
+| 运行 | 流式落库 + 增量 cursor + 安全中断 | ✅ |
+| 运行 | 采集控制台（启停 / 日志 / 健康）| ✅ |
+| 后台 | FastAPI + JWT + RBAC（5 角色 / 12 权限）| ✅ |
+| 业务 | 预警处置 / 申诉审核 / 项目监管 | ✅ 完整状态机 |
+| 前台 | 公众检索 / 详情页 / 看板 | ✅ |
+| 运维 | systemd timer + nginx + 告警邮件 + 备份 | ✅ 模板齐备 |
+
+## 目录
+
+```
+├── index.html               前端入口
+├── pages/                   HTML 页面（公众 + admin）
+├── scripts/                 前端 JS + 运维 shell
+├── styles/                  CSS
+├── collector/               采集中台（Python stdlib + Playwright + httpx）
+│   ├── cli.py                       CLI: init-db / run / run-stream / export-*
+│   ├── connectors.py                国家平台 + 浙江 + 省级 lvl1/lvl2 连接器
+│   ├── pipeline.py                  流式 per-batch 提交 + cursor
+│   ├── control_server.py            L1 控制 HTTP 服务（:8787 stdlib）
+│   └── config/sources.json          数据源注册表
+├── backend/                 L2 后端（FastAPI + SQLAlchemy + JWT）
+│   ├── main.py / config.py / database.py
+│   └── routers/                     auth / users / roles / alerts / appeals / projects / system
+├── deploy/                  systemd units + nginx + install.sh
+├── tests/                   pytest（52 个测试，CI 绿）
+└── docs                     USAGE.md / DEPLOYMENT.md / HAR_CAPTURE.md / PLATFORM_LIST.md
 ```
 
-## 采集中台快速开始
+## 文档地图
 
-先进入项目根目录：
+| 场景 | 看哪份 |
+|------|--------|
+| 第一次用、想跑起来 | [USAGE.md](USAGE.md) |
+| 上服务器生产部署 | [DEPLOYMENT.md](DEPLOYMENT.md) |
+| 接入新省级平台 | [HAR_CAPTURE.md](HAR_CAPTURE.md) |
+| 省级平台清单 | [PLATFORM_LIST.md](PLATFORM_LIST.md) |
+| 当贡献者（代码规范 / 命令）| [AGENTS.md](AGENTS.md) |
+| L1 采集模块内部 | [collector/README.md](collector/README.md) |
+| L2 后端模块内部 | [backend/README.md](backend/README.md) |
 
-```bash
-cd /mnt/g/mycode/mybuild
-```
+## 技术栈
 
-初始化并运行采集：
+- 前端：原生 HTML / CSS / JS，零构建
+- 采集：Python 3.11+、Playwright（国家平台 AES 解密）、httpx（浙江明文）
+- 控制服务：Python stdlib HTTP Server（零依赖）+ stdlib HS256 JWT 验证
+- 后端：FastAPI 0.136 + SQLAlchemy 2.0 + Pydantic v2 + JWT + bcrypt
+- 存储：SQLite（WAL 模式）+ Alembic 迁移 scaffold（PG 按需切换）
+- 部署：systemd + nginx + Let's Encrypt
 
-```bash
-python3 -m collector.cli init-db
-python3 -m collector.cli run
-```
+## 默认配置
 
-SQLite 数据库默认路径：
+- 前端 + 控制服务：`127.0.0.1:8787`
+- FastAPI 后端：`127.0.0.1:8000`
+- 默认管理员：`admin@example.com / build2026`（生产环境必改）
+- DB：`collector/data/collector.db`（采集） + `backend/data/operation.db`（用户 / 工单）
 
-```text
-collector/data/collector.db
-```
+---
 
-采集细节与验证命令见 [collector/README.md](/mnt/g/mycode/mybuild/collector/README.md)。
-
-当前采集实体类型：
-
-1. `enterprise`（建筑企业）
-2. `staff`（从业人员）
-3. `tender`（招投标）
-
-全国全量平台入口与二级探测可执行：
-
-```bash
-python3 -m collector.cli init-db --config collector/config/sources_nationwide_lvl2_full.json
-python3 -m collector.cli run --force-unlock
-python3 -m collector.cli export-interfaces
-```
-
-接口候选目录输出到：
-
-```text
-scripts/interface-catalog.json
-```
-
-## 下一步可扩展
-
-1. 接入真实省市数据源连接器（API + 公告页 + 文件导入）。
-2. 增加增量同步机制与任务调度（cron/Airflow）。
-3. 增加对外查询 API 和后台管理页面。
-4. 建立城市级统计与预警模型。
+**版本 v0.5**（2026-04-21）：L2 完整可部署、52 测试绿、CI 严格 ruff、浙江 connector + 增量采集就绪。
