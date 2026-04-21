@@ -575,19 +575,8 @@ class ZjJzscOpenApiConnectorBase(BaseConnector):
     # 2) base_url = "https://jzsc.jst.zj.gov.cn/publishserver/.../..."
     default_publish_prefix = "/publishserver/OTMjYOMMIukelnoVsiEji/OTMpyrr"
 
-    def fetch(self) -> Sequence[RawRecord]:
-        page_size = int(os.getenv("MYBUILD_ZJ_PAGE_SIZE", str(self.page_size)))
-        max_pages = int(os.getenv("MYBUILD_ZJ_MAX_PAGES", str(self.max_pages)))
-
-        forced_api_root = os.getenv("MYBUILD_ZJ_API_ROOT", "").strip()
-        base = self.source.base_url.rstrip("/")
-        if forced_api_root:
-            api_root = forced_api_root.rstrip("/")
-        elif "/publishserver/" in base:
-            api_root = base
-        else:
-            api_root = _discover_zj_api_root(base_url=base) or f"{base}{self.default_publish_prefix}"
-        headers = {
+    def _build_headers(self) -> Dict[str, str]:
+        return {
             "Accept": "application/json, text/plain, */*",
             "Content-Type": "application/json",
             "Origin": "https://jzsc.jst.zj.gov.cn",
@@ -602,11 +591,67 @@ class ZjJzscOpenApiConnectorBase(BaseConnector):
             "Sec-Fetch-Dest": "empty",
         }
 
+    def fetch(self) -> Sequence[RawRecord]:
+        page_size = int(os.getenv("MYBUILD_ZJ_PAGE_SIZE", str(self.page_size)))
+        max_pages = int(os.getenv("MYBUILD_ZJ_MAX_PAGES", str(self.max_pages)))
+
+        forced_api_root = os.getenv("MYBUILD_ZJ_API_ROOT", "").strip()
+        base = self.source.base_url.rstrip("/")
+        if forced_api_root:
+            api_root = forced_api_root.rstrip("/")
+        elif "/publishserver/" in base:
+            api_root = base
+        else:
+            api_root = _discover_zj_api_root(base_url=base) or f"{base}{self.default_publish_prefix}"
+        headers = self._build_headers()
+
+        city_batches = self._build_city_batches(api_root=api_root, headers=headers)
+        if city_batches:
+            # 按地市分片抓取，降低单路限流风险
+            all_rows: List[Dict] = []
+            total_batches = len(city_batches)
+            for i, batch in enumerate(city_batches, start=1):
+                batch_query = dict(self.query_template)
+                batch_query.update(batch)
+                batch_rows, api_root = self._fetch_rows_for_query(
+                    api_root=api_root,
+                    headers=headers,
+                    page_size=page_size,
+                    max_pages=max_pages,
+                    query=batch_query,
+                )
+                if batch_rows:
+                    all_rows.extend(batch_rows)
+                print(
+                    f"[zj {self.source.source_id}] city batch {i}/{total_batches} "
+                    f"{batch.get('City', '-')}: rows={len(batch_rows)}"
+                )
+            final_source_url = f"{api_root}/{self.api_module}/{self.api_action}"
+            return self._map_rows(all_rows, source_url=final_source_url)
+
+        rows, api_root = self._fetch_rows_for_query(
+            api_root=api_root,
+            headers=headers,
+            page_size=page_size,
+            max_pages=max_pages,
+            query=dict(self.query_template),
+        )
+        final_source_url = f"{api_root}/{self.api_module}/{self.api_action}"
+        return self._map_rows(rows, source_url=final_source_url)
+
+    def _fetch_rows_for_query(
+        self,
+        api_root: str,
+        headers: Dict[str, str],
+        page_size: int,
+        max_pages: int,
+        query: Dict[str, str],
+    ) -> tuple[List[Dict], str]:
         rows: List[Dict] = []
         with httpx.Client(timeout=self.timeout_seconds, headers=headers, follow_redirects=True) as client:
             page_count_from_server: int | None = None
             for page in range(1, max_pages + 1):
-                payload = dict(self.query_template)
+                payload = dict(query)
                 payload["pageIndex"] = page
                 payload["pageSize"] = page_size
                 # 浙江站 publishserver 前缀会变化；遇到 404/405 时动态重探测并重试当前页。
@@ -625,11 +670,15 @@ class ZjJzscOpenApiConnectorBase(BaseConnector):
                 assert resp is not None
                 resp.raise_for_status()
                 body = resp.json()
-                if int(body.get("code", -1)) != 0:
+                code = int(body.get("code", -1))
+                if code == 204:
+                    # 分片查询时常见“该地市暂无数据”，视为空页而非失败。
+                    break
+                if code != 0:
                     msg = body.get("msg") or body.get("exceptionMsg") or "unknown_error"
                     raise RuntimeError(
                         f"zj api failed module={self.api_module} action={self.api_action} "
-                        f"code={body.get('code')} msg={msg}"
+                        f"code={code} msg={msg}"
                     )
                 data = body.get("data") or {}
                 page_rows = data.get("list") or []
@@ -651,9 +700,21 @@ class ZjJzscOpenApiConnectorBase(BaseConnector):
                 if len(page_rows) < page_size:
                     break
                 time.sleep(0.04)
+        return rows, api_root
 
-        final_source_url = f"{api_root}/{self.api_module}/{self.api_action}"
-        return self._map_rows(rows, source_url=final_source_url)
+    def _build_city_batches(self, api_root: str, headers: Dict[str, str]) -> List[Dict[str, str]]:
+        """
+        可选地市分片：
+        - 仅在设置 MYBUILD_ZJ_CITY_SHARD=1 时启用。
+        - 通过 EnterpriseInfo/getCity 拉取地市代码，返回 [{"City":"330100","COUNTY":""}, ...]
+        """
+        if os.getenv("MYBUILD_ZJ_CITY_SHARD", "0").strip() != "1":
+            return []
+        cities = _fetch_zj_city_codes(api_root=api_root, headers=headers, timeout=self.timeout_seconds)
+        if not cities:
+            return []
+        # 注意：业务接口 `City` 参数需传中文地市名（如“杭州市”），传 code 会返回 code=204。
+        return [{"City": name, "COUNTY": ""} for _code, name in cities if name]
 
     def _map_rows(self, rows: List[Dict], source_url: str) -> List[RawRecord]:
         raise NotImplementedError
@@ -1520,6 +1581,51 @@ def _discover_zj_api_root(base_url: str) -> str | None:
     except Exception:  # noqa: BLE001
         return None
     return None
+
+
+def _fetch_zj_city_codes(
+    api_root: str,
+    headers: Dict[str, str],
+    timeout: int = 20,
+) -> List[tuple[str, str]]:
+    """
+    返回 [(city_code, city_name), ...]，例如 [("330100","杭州市"), ...]。
+    """
+    url = f"{api_root}/EnterpriseInfo/getCity"
+    out: List[tuple[str, str]] = []
+    try:
+        with httpx.Client(timeout=timeout, headers=headers, follow_redirects=True) as client:
+            # HAR 显示 GET/POST 都可用，这里优先 GET，失败再 POST。
+            resp = client.get(url)
+            if resp.status_code != 200:
+                resp = client.post(url, json={})
+            resp.raise_for_status()
+            body = resp.json()
+            if int(body.get("code", -1)) != 0:
+                return []
+            rows = body.get("data") or []
+            if not isinstance(rows, list):
+                return []
+            for r in rows:
+                code_raw = str(r.get("adminareaclassid", "")).strip()
+                name = str(r.get("adminareaname", "")).strip()
+                if not code_raw:
+                    continue
+                # API 期望 6 位 code
+                code = code_raw if len(code_raw) == 6 else code_raw[:6]
+                if len(code) == 6 and code.isdigit():
+                    out.append((code, name or code))
+    except Exception:  # noqa: BLE001
+        return []
+    # 去重保序
+    uniq: List[tuple[str, str]] = []
+    seen = set()
+    for c in out:
+        if c[0] in seen:
+            continue
+        seen.add(c[0])
+        uniq.append(c)
+    return uniq
 
 
 CONNECTOR_REGISTRY: Dict[str, Type[BaseConnector]] = {
