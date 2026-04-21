@@ -24,7 +24,6 @@ import hashlib
 import json
 import mimetypes
 import os
-import re
 import signal
 import sqlite3
 import subprocess
@@ -33,7 +32,7 @@ import threading
 from datetime import datetime, timezone
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
-from typing import Any, Callable, Dict, Optional, Tuple
+from typing import Any, Dict, Optional, Tuple
 from urllib.parse import parse_qs, urlparse
 
 
@@ -100,7 +99,6 @@ def _b64url_decode(data: str) -> bytes:
 
 def _verify_hs256_jwt(token: str, secret: str) -> Optional[Dict[str, Any]]:
     """仅支持 HS256，返回 payload dict 或 None。"""
-    import base64
     import hashlib
     import hmac
     import time
@@ -298,10 +296,7 @@ def _process_status() -> Dict[str, Any]:
     elapsed_sec = None
     try:
         # /proc/<pid>/stat 22 项 starttime (clock ticks since boot)
-        with open(f"/proc/{pid}/stat", "r") as f:
-            fields = f.read().split()
-        # field 22 is starttime; pos 21 in 0-indexed if fields[0]..fields[]..
-        # but fields[1] may contain spaces if proc name has spaces; use rfind
+        # fields[1] 可能含空格（proc name 有括号），用 rfind(')') 跳过 comm 字段。
         stat_line = open(f"/proc/{pid}/stat").read()
         rparen = stat_line.rfind(")")
         tail = stat_line[rparen + 2 :].split()
@@ -833,18 +828,18 @@ def main() -> None:
     server.daemon_threads = True
 
     def _graceful(_signum, _frame):
-        print(f"\n[control] signal received, shutting down...", file=sys.stderr)
+        print("\n[control] signal received, shutting down...", file=sys.stderr)
         threading.Thread(target=server.shutdown, daemon=True).start()
 
     signal.signal(signal.SIGINT, _graceful)
     signal.signal(signal.SIGTERM, _graceful)
 
     print("=" * 52)
-    print(f" 全国诚信市场建筑管理平台 · control server v0.3")
+    print(" 全国诚信市场建筑管理平台 · control server v0.3")
     print("=" * 52)
     print(f" listening   http://{host}:{port}/")
     print(f" allowed     {len(ALLOWED_HASHES)} credential hash(es)")
-    print(f"             (default: admin / build2026)")
+    print("             (default: admin / build2026)")
     print(f" log dir     {LOG_DIR}")
     print(f" db path     {DB_PATH}")
     print("=" * 52)

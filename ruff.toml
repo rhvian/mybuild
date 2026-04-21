@@ -1,0 +1,27 @@
+# ruff 配置 — 所有新代码以此为准。
+# 详见 https://docs.astral.sh/ruff/configuration/
+#
+# 当前规则集保守（仅 E+F），和 ruff 默认一致。
+# 待基线稳定后再渐进开启 I / B / UP / N 等规则。
+
+target-version = "py311"
+line-length = 120
+extend-exclude = [
+    "backend/migrations/versions",  # alembic 自动生成，不要检查
+    "collector/scripts",             # 一次性抓包 probe 脚本（调试用）
+    ".venv",
+    "build",
+    "dist",
+]
+
+[lint]
+# E  pycodestyle errors
+# F  pyflakes (undefined names / unused imports / unused vars)
+select = ["E", "F"]
+ignore = [
+    "E501",   # line too long — 由格式化处理，不硬拦
+]
+
+[lint.per-file-ignores]
+"tests/*" = ["E501"]
+

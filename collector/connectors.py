@@ -368,13 +368,13 @@ def _parse_enterprise_cursor_id(cursor_value: str | None) -> int | None:
 def _load_company_names_from_db(
     limit: int = 20000,
     since_enterprise_id: int | None = None,
-    db_path: "Path | None" = None,
+    db_path=None,
 ) -> List[str]:
     """
     从 collector.db 读取已采集企业的 QY_NAME，用于后续按企业反查人员 / 项目。
     只返回最新一次 enterprise run 的企业名，避免重复。
 
-    db_path 参数用于测试注入；生产留空使用默认路径。
+    db_path (Optional[pathlib.Path]) 参数用于测试注入；生产留空使用默认路径。
     """
     import sqlite3
     from pathlib import Path

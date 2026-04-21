@@ -9,9 +9,8 @@ from __future__ import annotations
 
 from datetime import datetime, timezone
 
-from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
+from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from sqlalchemy import func
-from sqlalchemy.orm import Session
 
 from ..deps import CurrentUser, DBSession, client_ip, require_permission
 from ..models import Alert, AlertAction, AuditLog

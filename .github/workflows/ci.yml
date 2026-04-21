@@ -27,8 +27,8 @@ jobs:
           pip install -r requirements.txt
           pip install ruff
 
-      - name: Ruff lint (backend + collector)
-        run: ruff check backend/ collector/ || true   # 暂不阻断，L2 完成后再收紧
+      - name: Ruff lint (backend + collector + tests)
+        run: ruff check backend/ collector/ tests/
 
       - name: Pytest
         run: |

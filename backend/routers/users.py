@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
-from sqlalchemy.orm import Session
 
 from ..deps import DBSession, CurrentUser, client_ip, require_permission
 from ..models import AuditLog, Role, User

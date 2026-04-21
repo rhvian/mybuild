@@ -1,7 +1,7 @@
 """数据库引擎 + ORM Base 类。"""
 from __future__ import annotations
 
-from sqlalchemy import create_engine, event, text
+from sqlalchemy import create_engine, event
 from sqlalchemy.engine import Engine
 from sqlalchemy.orm import DeclarativeBase, sessionmaker
 

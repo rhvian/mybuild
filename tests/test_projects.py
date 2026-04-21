@@ -17,7 +17,7 @@ def test_project_create_and_list(client: TestClient, admin_headers):
         },
     )
     assert r.status_code == 201
-    pid = r.json()["id"]
+    assert r.json()["id"] > 0
     assert r.json()["inspection_count"] == 0
 
     # 重复创建 409

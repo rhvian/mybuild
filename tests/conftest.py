@@ -18,8 +18,8 @@ os.environ["MYBUILD_JWT_SECRET"] = "test_secret_do_not_use_in_prod"
 os.environ["MYBUILD_BOOTSTRAP_ADMIN_EMAIL"] = "admin@example.com"
 os.environ["MYBUILD_BOOTSTRAP_ADMIN_PASSWORD"] = "test_admin_pw"
 
-import pytest
-from fastapi.testclient import TestClient
+import pytest  # noqa: E402
+from fastapi.testclient import TestClient  # noqa: E402
 
 from backend.bootstrap import bootstrap  # noqa: E402
 from backend.database import Base, SessionLocal, engine  # noqa: E402

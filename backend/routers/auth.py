@@ -1,10 +1,10 @@
 """/auth: 登录 / 登出 / 刷新 / 获取当前用户。"""
 from __future__ import annotations
 
+import time
 from datetime import datetime, timezone
 
-from fastapi import APIRouter, Depends, HTTPException, Request, status
-from sqlalchemy.orm import Session
+from fastapi import APIRouter, HTTPException, Request, status
 
 from ..deps import CurrentUser, DBSession, client_ip
 from ..models import AuditLog, User
@@ -20,8 +20,6 @@ router = APIRouter(prefix="/auth", tags=["auth"])
 
 
 # 内存限流：同 IP 10min 5 次失败锁 15min
-import time
-
 _FAIL_STATE: dict[str, tuple[float, int, float]] = {}
 
 
