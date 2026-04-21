@@ -197,3 +197,10 @@ python3 -m collector.cli run --force-unlock
 # 导出接口候选目录
 python3 -m collector.cli export-interfaces
 ```
+
+## 增量采集说明（A1 已接通）
+
+- `source_cursor` 已实际参与 connector 执行，不再只是占位字段。
+- `jzsc_staff_by_company_live` / `jzsc_project_by_company_live` 的游标格式为 `enterprise_id:<N>`。
+- 运行时只会处理 `normalized_entity.id > N` 的新增企业名，避免每次全量扫描历史企业。
+- 若该游标不存在，则默认首跑仍按当前库中企业全量反查一次；跑完后自动写入最新 `enterprise_id`。

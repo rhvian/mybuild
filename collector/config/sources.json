@@ -1,5 +1,25 @@
 [
   {
+    "source_id": "zj_jzsc_enterprise_live",
+    "name": "浙江住建公开平台-企业列表",
+    "source_type": "zj_jzsc_enterprise_live",
+    "source_level": "A",
+    "base_url": "https://jzsc.jst.zj.gov.cn",
+    "province_code": "330000",
+    "city_code": "330100",
+    "enabled": true
+  },
+  {
+    "source_id": "zj_jzsc_personnel_live",
+    "name": "浙江住建公开平台-人员列表",
+    "source_type": "zj_jzsc_personnel_live",
+    "source_level": "B",
+    "base_url": "https://jzsc.jst.zj.gov.cn",
+    "province_code": "330000",
+    "city_code": "330100",
+    "enabled": true
+  },
+  {
     "source_id": "jzsc_company_live",
     "name": "四库一平台-建筑企业真实数据",
     "source_type": "jzsc_company_live",

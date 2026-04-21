@@ -4,6 +4,7 @@ from abc import ABC, abstractmethod
 import asyncio
 from concurrent.futures import ThreadPoolExecutor, as_completed
 import json
+import os
 import re
 import ssl
 import time
@@ -11,6 +12,7 @@ import urllib.parse
 import urllib.request
 from typing import Callable, Dict, Iterable, List, Sequence, Type
 
+import httpx
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
 from playwright.async_api import async_playwright
@@ -55,8 +57,9 @@ PROVINCE_CODE_BY_SOURCE_PREFIX: Dict[str, str] = {
 class BaseConnector(ABC):
     source_type: str
 
-    def __init__(self, source: SourceDefinition):
+    def __init__(self, source: SourceDefinition, cursor_value: str | None = None):
         self.source = source
+        self.cursor_value = cursor_value
 
     @abstractmethod
     def fetch(self) -> Sequence[RawRecord]:
@@ -85,6 +88,8 @@ class JzscLiveConnectorBase(BaseConnector):
     dedup_field: str | None = None
     # 每 N 批主动刷 browser session（默认 8，对 ry_qymc 细粒度查询可调大）
     browser_refresh_every: int = 8
+    # 仅允许 batch 模式；当 batch 为空时直接返回空，不回退到“无筛选全量抓取”。
+    use_batched_only: bool = False
 
     def fetch(self) -> Sequence[RawRecord]:
         # 按地区筛选批量采集（在一个浏览器会话内遍历所有 region），避免每省重启 playwright 的高开销。
@@ -104,6 +109,8 @@ class JzscLiveConnectorBase(BaseConnector):
                 progress_tag=self.source.source_id,
             )
             return self._map_rows(rows)
+        if self.use_batched_only:
+            return []
         rows = _collect_pages_sync(
             base_url=self.source.base_url,
             page_path=self.page_path,
@@ -145,6 +152,8 @@ class JzscLiveConnectorBase(BaseConnector):
                 progress_tag=self.source.source_id,
                 on_batch=_raw_batch_cb,
             )
+            return
+        if self.use_batched_only:
             return
         # 无 batch 拆分 —— 整包返回作为单 batch
         rows = _collect_pages_sync(
@@ -341,7 +350,25 @@ class JzscProjectLiveConnector(JzscLiveConnectorBase):
         return records
 
 
-def _load_company_names_from_db(limit: int = 20000) -> List[str]:
+def _parse_enterprise_cursor_id(cursor_value: str | None) -> int | None:
+    if not cursor_value:
+        return None
+    raw = str(cursor_value).strip()
+    if not raw:
+        return None
+    if raw.startswith("enterprise_id:"):
+        raw = raw.split(":", 1)[1]
+    try:
+        val = int(raw)
+        return val if val > 0 else None
+    except Exception:  # noqa: BLE001
+        return None
+
+
+def _load_company_names_from_db(
+    limit: int = 20000,
+    since_enterprise_id: int | None = None,
+) -> List[str]:
     """
     从 collector.db 读取已采集企业的 QY_NAME，用于后续按企业反查人员 / 项目。
     只返回最新一次 enterprise run 的企业名，避免重复。
@@ -354,16 +381,33 @@ def _load_company_names_from_db(limit: int = 20000) -> List[str]:
         return []
     conn = sqlite3.connect(db_path)
     try:
-        rows = conn.execute(
-            """
-            SELECT DISTINCT name
-            FROM normalized_entity
-            WHERE entity_type='enterprise' AND name != ''
-            ORDER BY id DESC
-            LIMIT ?
-            """,
-            (limit,),
-        ).fetchall()
+        if since_enterprise_id is not None:
+            rows = conn.execute(
+                """
+                SELECT name, MAX(id) AS max_id
+                FROM normalized_entity
+                WHERE entity_type='enterprise'
+                  AND name != ''
+                  AND id > ?
+                GROUP BY name
+                ORDER BY max_id ASC
+                LIMIT ?
+                """,
+                (since_enterprise_id, limit),
+            ).fetchall()
+        else:
+            rows = conn.execute(
+                """
+                SELECT name, MAX(id) AS max_id
+                FROM normalized_entity
+                WHERE entity_type='enterprise'
+                  AND name != ''
+                GROUP BY name
+                ORDER BY max_id DESC
+                LIMIT ?
+                """,
+                (limit,),
+            ).fetchall()
     finally:
         conn.close()
     return [r[0] for r in rows if r[0]]
@@ -382,12 +426,17 @@ class JzscStaffByCompanyConnector(JzscLiveConnectorBase):
     max_pages = 35  # 每家企业几乎没到 31 页（大企业才几十上百人），留够余量
     dedup_field = "RY_ID"
     max_consecutive_failures = 10  # 大量企业查不到人员是正常的，不能过早中止
+    use_batched_only = True
     # 每家企业独立查询（不共用 session，但同一 browser）
     # browser_refresh_every 由 _collect_batched 的默认 8 控制
 
     def _prepare_batches(self) -> List[Dict[str, str]]:
         # 从 DB 拿已采企业名，每家企业一次查询
-        names = _load_company_names_from_db(limit=20000)
+        cursor_id = _parse_enterprise_cursor_id(self.cursor_value)
+        names = _load_company_names_from_db(
+            limit=50000,
+            since_enterprise_id=cursor_id,
+        )
         return [{"ry_qymc": name} for name in names]
 
     def _map_rows(self, rows: List[Dict]) -> List[RawRecord]:
@@ -447,9 +496,14 @@ class JzscProjectByCompanyConnector(JzscLiveConnectorBase):
     max_pages = 35
     dedup_field = "ID"
     max_consecutive_failures = 10
+    use_batched_only = True
 
     def _prepare_batches(self) -> List[Dict[str, str]]:
-        names = _load_company_names_from_db(limit=20000)
+        cursor_id = _parse_enterprise_cursor_id(self.cursor_value)
+        names = _load_company_names_from_db(
+            limit=50000,
+            since_enterprise_id=cursor_id,
+        )
         return [{"buildCorpName": name} for name in names]
 
     def _map_rows(self, rows: List[Dict]) -> List[RawRecord]:
@@ -491,6 +545,233 @@ class JzscProjectByCompanyConnector(JzscLiveConnectorBase):
                         "data_level": data_level,
                         "is_fake": is_fake,
                         "source_business_type": "jzsc_project_by_company",
+                    },
+                )
+            )
+        return records
+
+
+class ZjJzscOpenApiConnectorBase(BaseConnector):
+    """
+    浙江省住建厅公开平台（jzsc.jst.zj.gov.cn）明文接口连接器基类。
+
+    接口特征（来自 HAR）：
+    - POST /publishserver/<token1>/<token2>/<Module>/<Action>
+    - 响应结构：{code: 0, data: {list: [...]}, ...}
+    """
+
+    api_module: str
+    api_action: str
+    record_type: str
+    entity_type: str
+    query_template: Dict[str, str]
+
+    page_size = 100
+    # Safety cap only. Real stop condition uses response data.pager.pageCount.
+    max_pages = 5000
+    timeout_seconds = 25
+    # 支持两种配置方式：
+    # 1) base_url = "https://jzsc.jst.zj.gov.cn"（自动补全默认 publishserver 前缀）
+    # 2) base_url = "https://jzsc.jst.zj.gov.cn/publishserver/.../..."
+    default_publish_prefix = "/publishserver/OTMjYOMMIukelnoVsiEji/OTMpyrr"
+
+    def fetch(self) -> Sequence[RawRecord]:
+        page_size = int(os.getenv("MYBUILD_ZJ_PAGE_SIZE", str(self.page_size)))
+        max_pages = int(os.getenv("MYBUILD_ZJ_MAX_PAGES", str(self.max_pages)))
+
+        forced_api_root = os.getenv("MYBUILD_ZJ_API_ROOT", "").strip()
+        base = self.source.base_url.rstrip("/")
+        if forced_api_root:
+            api_root = forced_api_root.rstrip("/")
+        elif "/publishserver/" in base:
+            api_root = base
+        else:
+            api_root = _discover_zj_api_root(base_url=base) or f"{base}{self.default_publish_prefix}"
+        headers = {
+            "Accept": "application/json, text/plain, */*",
+            "Content-Type": "application/json",
+            "Origin": "https://jzsc.jst.zj.gov.cn",
+            "Referer": "https://jzsc.jst.zj.gov.cn/PublicWeb/index.html",
+            "User-Agent": (
+                "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+                "AppleWebKit/537.36 (KHTML, like Gecko) "
+                "Chrome/124.0.0.0 Safari/537.36"
+            ),
+            "Sec-Fetch-Site": "same-origin",
+            "Sec-Fetch-Mode": "cors",
+            "Sec-Fetch-Dest": "empty",
+        }
+
+        rows: List[Dict] = []
+        with httpx.Client(timeout=self.timeout_seconds, headers=headers, follow_redirects=True) as client:
+            page_count_from_server: int | None = None
+            for page in range(1, max_pages + 1):
+                payload = dict(self.query_template)
+                payload["pageIndex"] = page
+                payload["pageSize"] = page_size
+                # 浙江站 publishserver 前缀会变化；遇到 404/405 时动态重探测并重试当前页。
+                resp = None
+                current_api_root = api_root
+                for attempt in range(1, 4):
+                    url = f"{current_api_root}/{self.api_module}/{self.api_action}"
+                    resp = client.post(url, json=payload)
+                    if resp.status_code not in (404, 405):
+                        break
+                    discovered = _discover_zj_api_root(base_url=self.source.base_url.rstrip("/"))
+                    if not discovered:
+                        break
+                    current_api_root = discovered
+                    api_root = discovered
+                assert resp is not None
+                resp.raise_for_status()
+                body = resp.json()
+                if int(body.get("code", -1)) != 0:
+                    msg = body.get("msg") or body.get("exceptionMsg") or "unknown_error"
+                    raise RuntimeError(
+                        f"zj api failed module={self.api_module} action={self.api_action} "
+                        f"code={body.get('code')} msg={msg}"
+                    )
+                data = body.get("data") or {}
+                page_rows = data.get("list") or []
+                if not isinstance(page_rows, list):
+                    raise RuntimeError(f"zj api malformed list type: {type(page_rows).__name__}")
+                pager = data.get("pager") or {}
+                try:
+                    page_count_from_server = int(pager.get("pageCount")) if pager.get("pageCount") is not None else page_count_from_server
+                except Exception:  # noqa: BLE001
+                    pass
+                if not page_rows:
+                    break
+
+                rows.extend(page_rows)
+                # Primary stop condition: server declared total pages.
+                if page_count_from_server is not None and page >= page_count_from_server:
+                    break
+                # Fallback stop condition: short page.
+                if len(page_rows) < page_size:
+                    break
+                time.sleep(0.04)
+
+        final_source_url = f"{api_root}/{self.api_module}/{self.api_action}"
+        return self._map_rows(rows, source_url=final_source_url)
+
+    def _map_rows(self, rows: List[Dict], source_url: str) -> List[RawRecord]:
+        raise NotImplementedError
+
+
+class ZjJzscEnterpriseConnector(ZjJzscOpenApiConnectorBase):
+    source_type = "zj_jzsc_enterprise_live"
+    api_module = "EnterpriseInfo"
+    api_action = "enterpriseInfo"
+    record_type = "enterprise"
+    entity_type = "enterprise"
+    query_template = {
+        "CertID": "",
+        "EndDate": "",
+        "Zzmark": "",
+        "City": "",
+        "COUNTY": "",
+    }
+
+    def _map_rows(self, rows: List[Dict], source_url: str) -> List[RawRecord]:
+        records: List[RawRecord] = []
+        province_code = self.source.province_code or "330000"
+        city_code = self.source.city_code or "330100"
+        for idx, row in enumerate(rows, start=1):
+            city = str(row.get("city", "")).strip()
+            county = str(row.get("county", "")).strip()
+            city_name = f"{city} {county}".strip() or "浙江省"
+            name = str(row.get("corpname", "")).strip()
+            uscc = str(row.get("scucode1", "")).strip()
+            corp_code = str(row.get("corpcode1", "")).strip()
+            legal_person = str(row.get("legalmanname", "")).strip()
+            event_date = _epoch_ms_to_date(row.get("opiniondatetime1"))
+            if event_date == time.strftime("%Y-%m-%d"):
+                event_date = str(row.get("opiniondatetime", "")).strip() or event_date
+
+            records.append(
+                RawRecord(
+                    source_id=self.source.source_id,
+                    source_name=self.source.name,
+                    source_level=self.source.source_level,
+                    source_url=source_url,
+                    record_type=self.record_type,
+                    province_code=province_code,
+                    city_code=city_code,
+                    city_name=city_name,
+                    payload={
+                        "entity_type": self.entity_type,
+                        "name": name,
+                        "uscc": uscc,
+                        "project_code": corp_code or uscc or f"ZJ-CORP-{idx}",
+                        "score": 80,
+                        "status": "ACTIVE",
+                        "event_date": event_date,
+                        "legal_person": legal_person,
+                        "corpcode_encrypted": str(row.get("corpcode", "")).strip(),
+                        "source_business_type": "zj_jzsc_enterprise_list",
+                    },
+                )
+            )
+        return records
+
+
+class ZjJzscPersonnelConnector(ZjJzscOpenApiConnectorBase):
+    source_type = "zj_jzsc_personnel_live"
+    api_module = "PersonnelInfo"
+    api_action = "personnelWithin"
+    record_type = "staff"
+    entity_type = "staff"
+    query_template = {
+        "IdCard": "",
+        "SpecialtyTypeName": "",
+        "CorpName": "",
+        "EffectDate": "",
+        "City": "",
+        "COUNTY": "",
+    }
+
+    def _map_rows(self, rows: List[Dict], source_url: str) -> List[RawRecord]:
+        records: List[RawRecord] = []
+        province_code = self.source.province_code or "330000"
+        city_code = self.source.city_code or "330100"
+        for idx, row in enumerate(rows, start=1):
+            name = str(row.get("personname", "")).strip()
+            cert_num = str(row.get("certnum", "")).strip()
+            idcard_masked = str(row.get("idcard1", "")).strip()
+            corp_name = str(row.get("corpname", "")).strip()
+            uscc = str(row.get("scucode1", "")).strip()
+            specialty = str(row.get("specialtytypename", "")).strip()
+            major = str(row.get("zhuanye", "")).strip()
+            edu_level = str(row.get("edulevelname", "")).strip()
+            event_date = _epoch_ms_to_date(row.get("awarddate"))
+
+            records.append(
+                RawRecord(
+                    source_id=self.source.source_id,
+                    source_name=self.source.name,
+                    source_level=self.source.source_level,
+                    source_url=source_url,
+                    record_type=self.record_type,
+                    province_code=province_code,
+                    city_code=city_code,
+                    city_name="浙江省",
+                    payload={
+                        "entity_type": self.entity_type,
+                        "name": name,
+                        "uscc": uscc,
+                        "project_code": cert_num or idcard_masked or f"ZJ-STAFF-{idx}",
+                        "score": 80,
+                        "status": "ACTIVE",
+                        "event_date": event_date,
+                        "person_id_no_masked": idcard_masked,
+                        "register_type": specialty,
+                        "register_no": cert_num,
+                        "register_corp_name": corp_name,
+                        "major": major,
+                        "edu_level": edu_level,
+                        "corpcode_encrypted": str(row.get("corpcode", "")).strip(),
+                        "source_business_type": "zj_jzsc_personnel_list",
                     },
                 )
             )
@@ -1176,12 +1457,79 @@ def _resolve_admin_codes(source: SourceDefinition) -> tuple[str, str]:
     return province_code, city_code
 
 
+def _discover_zj_api_root(base_url: str) -> str | None:
+    """
+    动态发现浙江站当前有效 API 根路径。
+    优先从 PublicWeb 的 app.*.js 里提取 `$url:"https://.../publishserver/.../OTMpyrr"`。
+    """
+    try:
+        index_url = f"{base_url}/PublicWeb/index.html"
+        with httpx.Client(timeout=15, follow_redirects=True) as client:
+            idx = client.get(index_url).text
+            js_rel_paths = re.findall(r"static/js/app\.[a-f0-9]+\.js", idx)
+            candidates: List[str] = []
+            for rel in js_rel_paths:
+                app_js_url = f"{base_url}/PublicWeb/{rel}"
+                js = client.get(app_js_url).text
+                # 收集 app.js 里所有 publishserver 根路径候选
+                roots = re.findall(r"https?://[^\"']+/publishserver/[^\"']+", js)
+                for root in roots:
+                    root = root.rstrip("/")
+                    if root not in candidates:
+                        candidates.append(root)
+
+            # 对候选逐个探测：以 enterpriseInfo page=1,size=1 判断是否可用
+            probe_headers = {
+                "Accept": "application/json, text/plain, */*",
+                "Content-Type": "application/json",
+                "Origin": "https://jzsc.jst.zj.gov.cn",
+                "Referer": "https://jzsc.jst.zj.gov.cn/PublicWeb/index.html",
+                "User-Agent": (
+                    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+                    "AppleWebKit/537.36 (KHTML, like Gecko) "
+                    "Chrome/145.0.0.0 Safari/537.36"
+                ),
+                "Sec-Fetch-Site": "same-origin",
+                "Sec-Fetch-Mode": "cors",
+                "Sec-Fetch-Dest": "empty",
+            }
+            probe_payload = {
+                "CertID": "",
+                "EndDate": "",
+                "Zzmark": "",
+                "City": "",
+                "COUNTY": "",
+                "pageIndex": 1,
+                "pageSize": 1,
+            }
+            for root in candidates:
+                try:
+                    resp = client.post(
+                        f"{root}/EnterpriseInfo/enterpriseInfo",
+                        headers=probe_headers,
+                        json=probe_payload,
+                        timeout=12,
+                    )
+                    if resp.status_code != 200:
+                        continue
+                    body = resp.json()
+                    if int(body.get("code", -1)) == 0:
+                        return root
+                except Exception:  # noqa: BLE001
+                    continue
+    except Exception:  # noqa: BLE001
+        return None
+    return None
+
+
 CONNECTOR_REGISTRY: Dict[str, Type[BaseConnector]] = {
     JzscCompanyLiveConnector.source_type: JzscCompanyLiveConnector,
     JzscStaffLiveConnector.source_type: JzscStaffLiveConnector,
     JzscProjectLiveConnector.source_type: JzscProjectLiveConnector,
     JzscStaffByCompanyConnector.source_type: JzscStaffByCompanyConnector,
     JzscProjectByCompanyConnector.source_type: JzscProjectByCompanyConnector,
+    ZjJzscEnterpriseConnector.source_type: ZjJzscEnterpriseConnector,
+    ZjJzscPersonnelConnector.source_type: ZjJzscPersonnelConnector,
     ProvincePortalIndexConnector.source_type: ProvincePortalIndexConnector,
     ProvinceEntryProbeConnector.source_type: ProvinceEntryProbeConnector,
 }
@@ -1194,8 +1542,19 @@ def build_connector(source: SourceDefinition) -> BaseConnector:
     return connector_cls(source)
 
 
+def build_connector_with_cursor(
+    source: SourceDefinition,
+    cursor_value: str | None,
+) -> BaseConnector:
+    connector_cls = CONNECTOR_REGISTRY.get(source.source_type)
+    if connector_cls is None:
+        raise ValueError(f"Unsupported source type: {source.source_type}")
+    return connector_cls(source, cursor_value=cursor_value)
+
+
 def fetch_all_sources_stable(
     sources: Iterable[SourceDefinition],
+    source_cursors: Dict[str, str] | None = None,
     max_attempts: int = 3,
     backoff_seconds: float = 1.0,
     max_workers: int = 8,
@@ -1207,9 +1566,10 @@ def fetch_all_sources_stable(
 
     def _run_one(source: SourceDefinition) -> tuple[List[RawRecord], SourceFailure | None]:
         last_err: Exception | None = None
+        cursor_value = (source_cursors or {}).get(source.source_id)
         for attempt in range(1, max_attempts + 1):
             try:
-                connector = build_connector(source)
+                connector = build_connector_with_cursor(source, cursor_value)
                 records = connector.fetch()
                 return list(records), None
             except Exception as err:  # noqa: BLE001

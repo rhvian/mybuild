@@ -9,7 +9,7 @@ from uuid import uuid4
 
 from .connectors import (
     JzscLiveConnectorBase,
-    build_connector,
+    build_connector_with_cursor,
     fetch_all_sources_stable,
 )
 from .models import RawRecord, RunSummary, SourceDefinition, SourceFailure
@@ -97,8 +97,11 @@ def run_pipeline(db_path: Path, force_unlock: bool = False) -> RunSummary:
             raise RuntimeError("Pipeline already running: run lock not acquired")
 
         sources = read_enabled_sources(conn)
-        read_source_cursors(conn)  # reserved for incremental connectors
-        raw_records, source_failures = fetch_all_sources_stable(sources)
+        source_cursors = read_source_cursors(conn)
+        raw_records, source_failures = fetch_all_sources_stable(
+            sources,
+            source_cursors=source_cursors,
+        )
         normalized = normalize_batch(raw_records)
         quality_issues = validate_batch(normalized)
 
@@ -106,10 +109,21 @@ def run_pipeline(db_path: Path, force_unlock: bool = False) -> RunSummary:
         normalized_count = upsert_normalized(conn, run_id, normalized)
         issue_count = insert_quality_issues(conn, run_id, quality_issues)
         failed_source_count = insert_source_failures(conn, run_id, source_failures)
-        upsert_source_cursors(
-            conn,
-            {source.source_id: ended_cursor() for source in sources},
-        )
+        next_cursors = {}
+        for source in sources:
+            if source.source_id in {"jzsc_staff_by_company_live", "jzsc_project_by_company_live"}:
+                row = conn.execute(
+                    """
+                    SELECT COALESCE(MAX(id), 0) AS max_id
+                    FROM normalized_entity
+                    WHERE entity_type='enterprise'
+                    """
+                ).fetchone()
+                max_ent_id = int(row["max_id"]) if row else 0
+                next_cursors[source.source_id] = f"enterprise_id:{max_ent_id}"
+            else:
+                next_cursors[source.source_id] = ended_cursor()
+        upsert_source_cursors(conn, next_cursors)
 
         ended_at = _utc_now_iso()
         insert_run_summary(
@@ -220,6 +234,7 @@ def run_pipeline_streaming(
                     source_count=0, raw_count=0, normalized_count=0, issue_count=0,
                     failed_source_count=0, issues=[], failures=[],
                 )
+        source_cursors = read_source_cursors(conn)
         _print(f"run_id={run_id} sources={len(sources)} mode=streaming" + (f" filter={sorted(source_ids)}" if source_ids else ""))
 
         for src_idx, source in enumerate(sources, start=1):
@@ -249,7 +264,10 @@ def run_pipeline_streaming(
                 )
 
             try:
-                connector = build_connector(source)
+                connector = build_connector_with_cursor(
+                    source,
+                    source_cursors.get(source.source_id),
+                )
             except Exception as e:  # noqa: BLE001
                 _print(f"  ! connector build failed: {e!r}")
                 all_failures.append(
@@ -273,7 +291,20 @@ def run_pipeline_streaming(
                     _on_batch("all", records)
                 _print(f"source {src_idx}/{len(sources)} [{source.source_id}] done src_raw={src_raw} src_norm={src_norm}")
                 # 每 source 完成就推进 cursor（可断点续）
-                upsert_source_cursors(conn, {source.source_id: ended_cursor()})
+                # A1: 采集游标真正接入 connector。
+                # 对 by_company 源，游标绑定到企业表最新 id（只处理新增企业）。
+                if source.source_id in {"jzsc_staff_by_company_live", "jzsc_project_by_company_live"}:
+                    row = conn.execute(
+                        """
+                        SELECT COALESCE(MAX(id), 0) AS max_id
+                        FROM normalized_entity
+                        WHERE entity_type='enterprise'
+                        """
+                    ).fetchone()
+                    max_ent_id = int(row["max_id"]) if row else 0
+                    upsert_source_cursors(conn, {source.source_id: f"enterprise_id:{max_ent_id}"})
+                else:
+                    upsert_source_cursors(conn, {source.source_id: ended_cursor()})
             except KeyboardInterrupt:
                 _print(f"  ! interrupted by user during [{source.source_id}]")
                 raise
