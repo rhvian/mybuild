@@ -134,7 +134,7 @@ def _build_stats(cur: sqlite3.Cursor) -> dict:
 def export_live_json(
     db_path: Path,
     output_path: Path,
-    limit_each: int = 20000,
+    limit_each: int = 500,
 ) -> None:
     conn = sqlite3.connect(db_path)
     conn.row_factory = sqlite3.Row
@@ -156,11 +156,11 @@ def export_live_json(
             "run_id": run_id,
             "updated_at": run["ended_at"],
             "stats": _build_stats(cur),
-            # enterprise 全量（~14k 家，约 3MB，可用于前端全文检索）
+            # 各实体默认仅导出最近 limit_each 条，避免 live-data.json 持续膨胀。
             "enterprise": _rows(cur, "enterprise", limit_each),
-            # staff 至多 5000 条（130k 数据量太大，只保留近期样本）
+            # staff 仍受硬上限保护（防止被外部调用传入过大值）
             "staff": _rows(cur, "staff", min(limit_each, 5000)),
-            # tender 至多 5000 条
+            # tender 同上
             "tender": _rows(cur, "tender", min(limit_each, 5000)),
         }
 
@@ -173,7 +173,7 @@ def main() -> None:
     project_root = Path(__file__).resolve().parent.parent
     db_path = project_root / "collector" / "data" / "collector.db"
     output_path = project_root / "scripts" / "live-data.json"
-    export_live_json(db_path=db_path, output_path=output_path, limit_each=6000)
+    export_live_json(db_path=db_path, output_path=output_path, limit_each=500)
     print(f"[export] live data written to: {output_path}")
 
 

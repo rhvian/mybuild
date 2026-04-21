@@ -47,22 +47,36 @@ sidebarLinks.forEach((link) => {
 
 
 /* ===== Admin Live Data ===== */
-let adminData = null;
+let adminStats = null;
+let entTotal = 0;
+let entTotalPages = 1;
+let entReqSeq = 0;
+
+async function apiGet(path, params = {}) {
+  const qs = new URLSearchParams();
+  Object.entries(params).forEach(([k, v]) => {
+    if (v !== undefined && v !== null && String(v) !== "") {
+      qs.set(k, String(v));
+    }
+  });
+  const url = qs.toString() ? `${path}?${qs.toString()}` : path;
+  const resp = await fetch(url, { cache: "no-store" });
+  if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+  return resp.json();
+}
 
 async function loadAdminData() {
   try {
-    const resp = await fetch("../scripts/live-data.json", { cache: "no-store" });
-    if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
-    adminData = await resp.json();
-    renderOverview(adminData);
+    const data = await apiGet("/api/stats");
+    adminStats = data.stats || {};
+    renderOverview(adminStats);
     renderEnterpriseList();
   } catch (e) {
     console.error("admin load failed", e);
   }
 }
 
-function renderOverview(data) {
-  const stats = data.stats || {};
+function renderOverview(stats) {
   const set = (id, v) => {
     const el = document.getElementById(id);
     if (el) el.textContent = v;
@@ -117,18 +131,7 @@ const PAGE_SIZE = 20;
 let entPage = 1;
 let entFilter = { keyword: "", province: "" };
 
-function getFilteredEnterprises() {
-  if (!adminData) return [];
-  return (adminData.enterprise || []).filter((e) => {
-    const kw = entFilter.keyword.trim();
-    const provOk = !entFilter.province || (e.city_name || "").includes(entFilter.province);
-    if (!provOk) return false;
-    if (!kw) return true;
-    return (e.name || "").includes(kw) || (e.uscc || "").toUpperCase().includes(kw.toUpperCase());
-  });
-}
-
-function renderEnterpriseList() {
+async function renderEnterpriseList() {
   const body = document.getElementById("a-ent-body");
   const hint = document.getElementById("a-ent-hint");
   const pageEl = document.getElementById("a-ent-page");
@@ -136,37 +139,53 @@ function renderEnterpriseList() {
 
   // 省份下拉填充
   const provSelect = document.getElementById("a-ent-prov");
-  if (provSelect && provSelect.children.length <= 1 && adminData) {
-    const provs = ((adminData.stats || {}).province_enterprise || [])
+  if (provSelect && provSelect.children.length <= 1 && adminStats) {
+    const provs = (adminStats.province_enterprise || [])
       .filter((p) => p.province_code !== "000000" && p.count > 0);
     provSelect.innerHTML = '<option value="">全部省份</option>' +
       provs.map((p) => `<option value="${p.province_name}">${p.province_name}</option>`).join("");
   }
 
-  const filtered = getFilteredEnterprises();
-  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
-  if (entPage > totalPages) entPage = totalPages;
+  const reqSeq = ++entReqSeq;
+  try {
+    const data = await apiGet("/api/enterprise", {
+      page: entPage,
+      size: PAGE_SIZE,
+      q: entFilter.keyword.trim(),
+      province: entFilter.province,
+    });
+    if (reqSeq !== entReqSeq) return;
+    const pageData = data.items || [];
+    entTotal = Number(data.total || 0);
+    entTotalPages = Math.max(1, Number(data.pages || 1));
+    entPage = Math.min(entPage, entTotalPages);
+    const start = entTotal === 0 ? 0 : (entPage - 1) * PAGE_SIZE + 1;
+    const end = entTotal === 0 ? 0 : (entPage - 1) * PAGE_SIZE + pageData.length;
 
-  const start = (entPage - 1) * PAGE_SIZE;
-  const pageData = filtered.slice(start, start + PAGE_SIZE);
+    if (hint) hint.textContent = `共匹配 ${entTotal.toLocaleString()} 家企业（当前显示 ${start}-${end}）`;
+    if (pageEl) pageEl.textContent = `第 ${entPage} / ${entTotalPages} 页`;
 
-  if (hint) hint.textContent = `共匹配 ${filtered.length.toLocaleString()} 家企业（当前显示 ${start + 1}-${start + pageData.length}）`;
-  if (pageEl) pageEl.textContent = `第 ${entPage} / ${totalPages} 页`;
-
-  if (pageData.length === 0) {
-    body.innerHTML = `<tr><td colspan="6">没有匹配的企业</td></tr>`;
-    return;
+    if (pageData.length === 0) {
+      body.innerHTML = `<tr><td colspan="6">没有匹配的企业</td></tr>`;
+      return;
+    }
+    body.innerHTML = pageData.map((e) => `
+      <tr>
+        <td>${e.name || "-"}</td>
+        <td>${e.uscc || "-"}</td>
+        <td>${e.payload?.legal_person || "-"}</td>
+        <td>${e.city_name || "-"}</td>
+        <td><span class="status ok">${e.status || "-"}</span></td>
+        <td><a href="enterprise.html?id=${encodeURIComponent(String(e.id))}" class="link">查看</a></td>
+      </tr>
+    `).join("");
+  } catch (e) {
+    if (reqSeq !== entReqSeq) return;
+    if (hint) hint.textContent = "企业列表加载失败";
+    if (pageEl) pageEl.textContent = "第 - / - 页";
+    body.innerHTML = `<tr><td colspan="6">加载失败，请稍后重试</td></tr>`;
+    console.error("enterprise list load failed", e);
   }
-  body.innerHTML = pageData.map((e) => `
-    <tr>
-      <td>${e.name || "-"}</td>
-      <td>${e.uscc || "-"}</td>
-      <td>${e.payload?.legal_person || "-"}</td>
-      <td>${e.city_name || "-"}</td>
-      <td><span class="status ok">${e.status || "-"}</span></td>
-      <td><a href="enterprise.html?id=${encodeURIComponent(String(e.id))}" class="link">查看</a></td>
-    </tr>
-  `).join("");
 }
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -195,8 +214,7 @@ document.addEventListener("DOMContentLoaded", () => {
   }
   if (prev) prev.addEventListener("click", () => { if (entPage > 1) { entPage--; renderEnterpriseList(); } });
   if (next) next.addEventListener("click", () => {
-    const total = Math.max(1, Math.ceil(getFilteredEnterprises().length / PAGE_SIZE));
-    if (entPage < total) { entPage++; renderEnterpriseList(); }
+    if (entPage < entTotalPages) { entPage++; renderEnterpriseList(); }
   });
 });
 

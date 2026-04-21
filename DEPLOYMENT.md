@@ -67,7 +67,7 @@ collector/config/sources.json
 配置模板在 `deploy/nginx-mybuild.conf`，已经预置：
 
 - HTTP → HTTPS 301
-- gzip（JSON 压缩，live-data.json ~13MB → ~3MB）
+- gzip（JSON 压缩，live-data.json 默认约 1MB 级）
 - `/api/*` 禁缓存、超时 600s（启停采集可能阻塞）
 - `live-data.json` / `source-routes.json` / `interface-catalog.json` 禁缓存
 - 其它 JS/CSS/图片缓存 1h
@@ -131,7 +131,7 @@ server {
 ```
 
 **注意：**
-- `scripts/live-data.json` 当前 ~13 MB（14k 企业 + 5k 人员 + 5k 项目 + stats）。Gzip 后 ~3 MB。
+- `scripts/live-data.json` 默认仅导出近期样本（每类 500 条 + stats），通常约 1MB 级；可通过 `export_live_json(limit_each=...)` 调整。
 - 如果 staff 采到 130k 条，需要拆分为独立 JSON 或改后端 API（见"后续优化"）。
 
 ---
@@ -372,4 +372,3 @@ sudo systemctl start mybuild-collect.service
 # 6. 杀所有相关进程
 pkill -9 -f "collector\|chrome-headless\|playwright"
 ```
-

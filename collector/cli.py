@@ -79,7 +79,7 @@ def cmd_run(db: Path, force_unlock: bool = False) -> None:
     export_live_json(
         db_path=db,
         output_path=project_root / "scripts" / "live-data.json",
-        limit_each=20000,
+        limit_each=500,
     )
     export_source_routes_json(
         db_path=db,
@@ -157,7 +157,7 @@ def cmd_run_stream(
         export_live_json(
             db_path=db,
             output_path=project_root / "scripts" / "live-data.json",
-            limit_each=6000,
+            limit_each=500,
         )
         export_source_routes_json(
             db_path=db,
