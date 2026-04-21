@@ -40,3 +40,6 @@ perplexity_info.txt
 .pytest_cache/
 .ruff_cache/
 .mypy_cache/
+
+# HAR 抓包文件（含浏览器 session，禁止入库）
+*.har
