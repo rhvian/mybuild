@@ -15,11 +15,12 @@ backend/data/*.db-shm
 backend/data/*.db-wal
 backend/data/jwt_secret.key
 
-# 内部规划 / 会话记录 / agent 指令（不属于产品仓库）
+# 内部规划 / 会话记录 / agent 指令 / 抓包指南（不属于产品仓库）
 PLAN.md
 NEXT_STEPS.md
 SESSION_NOTES.md
 CLAUDE.md
+HAR_CAPTURE.md
 
 # 临时截图 / 媒体
 *.png
